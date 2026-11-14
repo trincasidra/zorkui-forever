@@ -1,0 +1,7 @@
+## Interface: 16001
+## Author: zork
+## Title: rTooltip
+## Notes: Tooltip enhancements
+## RequiredDeps: rLib
+
+core.lua
