@@ -26,4 +26,4 @@ local function CreatePetStyle(self)
   --style
   L.F.CreateStyle(self)
 end
-L.F.CreatePetStyle = CreatePetStyle
+L.F.CreatePetStyle = CreatePetStyle

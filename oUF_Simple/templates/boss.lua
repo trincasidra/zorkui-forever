@@ -26,4 +26,4 @@ local function CreateBossStyle(self)
   --style
   L.F.CreateStyle(self)
 end
-L.F.CreateBossStyle = CreateBossStyle
+L.F.CreateBossStyle = CreateBossStyle

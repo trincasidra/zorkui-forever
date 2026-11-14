@@ -26,4 +26,4 @@ local function CreateMouseoverStyle(self)
   --style
   L.F.CreateStyle(self)
 end
-L.F.CreateMouseoverStyle = CreateMouseoverStyle
+L.F.CreateMouseoverStyle = CreateMouseoverStyle

@@ -15,7 +15,6 @@ local A, L = ...
 if not L.C.party or not L.C.party.enabled then return end
 
 local function CreatePartyStyle(self)
-  print('a')
   --config
   self.cfg = L.C.party
   --settings
@@ -26,6 +25,5 @@ local function CreatePartyStyle(self)
   self.settings.createDrag = false
   --style
   L.F.CreateStyle(self)
-  print('party')
 end
-L.F.CreatePartyStyle = CreatePartyStyle
+L.F.CreatePartyStyle = CreatePartyStyle

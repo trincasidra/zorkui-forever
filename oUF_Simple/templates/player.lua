@@ -26,4 +26,4 @@ local function CreatePlayerStyle(self)
   --style
   L.F.CreateStyle(self)
 end
-L.F.CreatePlayerStyle = CreatePlayerStyle
+L.F.CreatePlayerStyle = CreatePlayerStyle

@@ -26,4 +26,4 @@ local function CreateRaidStyle(self)
   --style
   L.F.CreateStyle(self)
 end
-L.F.CreateRaidStyle = CreateRaidStyle
+L.F.CreateRaidStyle = CreateRaidStyle

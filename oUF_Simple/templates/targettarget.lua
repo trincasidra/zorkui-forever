@@ -26,4 +26,4 @@ local function CreateTargetTargetStyle(self)
   --style
   L.F.CreateStyle(self)
 end
-L.F.CreateTargetTargetStyle = CreateTargetTargetStyle
+L.F.CreateTargetTargetStyle = CreateTargetTargetStyle

@@ -26,4 +26,4 @@ local function CreateNamePlateStyle(self)
   --style
   L.F.CreateStyle(self)
 end
-L.F.CreateNamePlateStyle = CreateNamePlateStyle
+L.F.CreateNamePlateStyle = CreateNamePlateStyle

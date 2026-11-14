@@ -56,4 +56,4 @@ L.C.targettarget = {
     growthY = "DOWN",
     disableCooldown = true,
   },
-}
+}

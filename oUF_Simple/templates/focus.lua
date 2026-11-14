@@ -26,4 +26,4 @@ local function CreateFocusStyle(self)
   --style
   L.F.CreateStyle(self)
 end
-L.F.CreateFocusStyle = CreateFocusStyle
+L.F.CreateFocusStyle = CreateFocusStyle
