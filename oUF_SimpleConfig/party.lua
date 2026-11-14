@@ -69,7 +69,7 @@ L.C.party = {
     disableCooldown = true,
   },
   setup = {
-    template = "SecurePartyHeaderTemplate",
+    template = nil,
     visibility = "custom [@raid6,exists] hide;show",
     showPlayer = true,
     showParty = true,

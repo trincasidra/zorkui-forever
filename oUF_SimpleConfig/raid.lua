@@ -53,7 +53,7 @@ L.C.raid = {
     point = {"CENTER","TOP",0,0},
   },
   setup = {
-    template = "SecureRaidGroupHeaderTemplate",
+    template = nil,
     visibility = "custom [@raid6,exists] show;hide",
     showPlayer = false,
     showParty = false,
