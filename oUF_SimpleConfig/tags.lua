@@ -13,10 +13,13 @@ local A, L = ...
 -----------------------------
 
 local floor = floor
+--Forever: several unit APIs can return secret values, those must not be compared/tested
+local issecretvalue = issecretvalue or function() return false end
 
 --tag method: oUF_SimpleConfig:status
 L.C.tagMethods["oUF_SimpleConfig:status"] = function(unit,...)
-  if UnitAffectingCombat(unit) then
+  local inCombat = UnitAffectingCombat(unit)
+  if not issecretvalue(inCombat) and inCombat then
     return "|TInterface\\CharacterFrame\\UI-StateIcon:20:20:0:0:64:64:33:64:0:31|t"
   elseif unit == "player" and IsResting() then
     return "|TInterface\\CharacterFrame\\UI-StateIcon:20:20:0:0:64:64:0:31:0:31|t"
@@ -27,6 +30,8 @@ end
 L.C.tagMethods["oUF_SimpleConfig:classification"] = function(unit)
   local c = UnitClassification(unit)
   local l = UnitLevel(unit)
+  if issecretvalue(c) then c = nil end
+  if issecretvalue(l) then l = nil end
   if(c == 'worldboss' or l == -1) then
     return '|cffff0000{B}|r '
   elseif(c == 'rare') then

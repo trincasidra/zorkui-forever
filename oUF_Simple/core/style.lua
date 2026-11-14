@@ -13,12 +13,20 @@ local oUF = L.oUF or oUF
 -- Style
 -----------------------------
 
+--fix mana color (once, oUF.colors is shared by all frames)
+--oUF 14 looks power colors up by token ("MANA") *and* by power type index (0 for the
+--additional power bar), and expects its own color objects (with :GetCurve/:GetAtlas).
+if L.C.colors.power and L.C.colors.power.mana then
+  local c = L.C.colors.power.mana
+  local r, g, b
+  if c.GetRGB then r, g, b = c:GetRGB() else r, g, b = unpack(c) end
+  local mana = oUF:CreateColor(r, g, b)
+  oUF.colors.power.MANA = mana
+  oUF.colors.power[Enum.PowerType and Enum.PowerType.Mana or 0] = mana
+end
+
 --CreateStyle
 local function CreateStyle(self)
-  --fix mana color
-  if L.C.colors.power and L.C.colors.power.mana then
-    self.colors.power["MANA"] = L.C.colors.power.mana
-  end
   L.F.SetupFrame(self)
   L.F.SetupHeader(self)
   L.F.CreateDragFrame(self)
@@ -45,4 +53,4 @@ local function CreateStyle(self)
   self.RaidTargetIndicator = L.F.CreateRaidMark(self)
   self.ClassPower = L.F.CreateClassPower(self)
 end
-L.F.CreateStyle = CreateStyle
+L.F.CreateStyle = CreateStyle
