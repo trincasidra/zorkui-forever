@@ -24,6 +24,7 @@ L.C.tagMethods["oUF_SimpleConfig:status"] = function(unit,...)
     return "|TInterface\\CharacterFrame\\UI-StateIcon:20:20:0:0:64:64:0:31:0:31|t"
   end
 end
+L.C.tagEvents["oUF_SimpleConfig:status"] = "PLAYER_REGEN_DISABLED PLAYER_REGEN_ENABLED PLAYER_UPDATE_RESTING"
 
 L.C.tagMethods["oUF_SimpleConfig:classification"] = function(unit)
   local c = UnitClassification(unit)
@@ -40,5 +41,13 @@ L.C.tagMethods["oUF_SimpleConfig:classification"] = function(unit)
     return '|cffff6666{E}|r '
   end
 end
-L.C.tagEvents["oUF_SimpleConfig:status"] = "PLAYER_REGEN_DISABLED PLAYER_REGEN_ENABLED PLAYER_UPDATE_RESTING"
 L.C.tagEvents["oUF_SimpleConfig:classification"] = "UNIT_CLASSIFICATION_CHANGED"
+
+L.C.tagMethods["oUF_SimpleConfig:pvpStatus"] = function(unit,...)
+  if not UnitIsPVP(unit) then return "" end
+  if unit ~= "player" then return "|cffff6666PvP|r" end
+  local pvpTimer = math.floor(GetPVPTimer()/1000)
+  if pvpTimer < 300 then return "|cffff6666PvP|r "..pvpTimer.."s" end
+  return "|cffff6666PvP|r"
+end
+L.C.tagEvents["oUF_SimpleConfig:pvpStatus"] = "WAR_MODE_STATUS_UPDATE"

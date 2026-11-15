@@ -44,7 +44,7 @@ L.C.player = {
         {"TOPRIGHT",-2,10},
       },
       size = 17,
-      tag = "[oUF_SimpleConfig:status]",
+      tag = "[oUF_SimpleConfig:status][oUF_SimpleConfig:pvpStatus]",
     },
     health = {
       enabled = true,

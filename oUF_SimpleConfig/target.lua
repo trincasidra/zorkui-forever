@@ -46,7 +46,7 @@ L.C.target = {
         {"TOPRIGHT",-2,10},
       },
       size = 16,
-      tag = "[oUF_SimpleConfig:classification][difficulty][name]|r",
+      tag = "[oUF_SimpleConfig:classification][difficulty][name]|r[oUF_SimpleConfig:pvpStatus]",
     },
     health = {
       enabled = true,
