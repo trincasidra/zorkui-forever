@@ -37,7 +37,7 @@ L.C.mouseover = {
       align = "CENTER",
       tag = "[difficulty][name]",
     },
-    debuffHighlight = true,
+    debuffHighlight = false,
   },
   --raidmark
   raidmark = {

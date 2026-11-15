@@ -34,11 +34,12 @@ L.C.boss = {
       align = "CENTER",
       tag = "[name]",
     },
-    debuffHighlight = true,
+    debuffHighlight = false,
   },
   --powerbar
   powerbar = {
     enabled = true,
+    frequentUpdates = true,
     size = {130,5},
     point = {"TOP","BOTTOM",0,-4}, --if no relativeTo is given the frame base will be the relativeTo reference
     colorPower = true,
@@ -98,7 +99,7 @@ L.C.boss = {
     initialAnchor = "TOPLEFT",
     growthX = "RIGHT",
     growthY = "DOWN",
-    disableCooldown = true,
+    disableCooldown = false,
   },
   setup = {
     point = "TOP",

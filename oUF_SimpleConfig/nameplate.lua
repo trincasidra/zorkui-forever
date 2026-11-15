@@ -30,9 +30,9 @@ local cvars = {
   NamePlateHorizontalScale  = 1,
   NamePlateVerticalScale    = 1,
   nameplateSelfScale        = 1,
-  nameplateSelectedScale    = 1,
-  nameplateLargerScale      = 1.2,
-  nameplateShowFriendlyNPCs = 1,
+  nameplateSelectedScale    = 1.35,
+  nameplateLargerScale      = 1,
+  nameplateShowFriendlyNPCs = 0,
   nameplateMinAlpha         = 0.5,
   nameplateMaxAlpha         = 0.5,
   nameplateMinAlphaDistance = 0,
@@ -46,16 +46,13 @@ L.C.NamePlateCVars = cvars
 -- NamePlateConfig
 -----------------------------
 
---custom filter for nameplate debuffs
-local function CustomFilter(...)
-  --icons, unit, icon, name, texture, count, dispelType, duration, expiration, caster, isStealable, nameplateShowSelf, spellID, canApply, isBossDebuff, casterIsPlayer, nameplateShowAll
-  local _, _, _, _, _, _, _, _, _, caster, _, _, _, _, _, _, nameplateShowAll = ...
-  return nameplateShowAll or (caster == "player" or caster == "pet" or caster == "vehicle")
-end
+--nameplate debuffs: oUF 14 auras are filtered by the client (aura data is secret), Lua
+--CustomFilter functions are no longer supported. "HARMFUL|PLAYER" = your own debuffs,
+--"HARMFUL|INCLUDE_NAME_PLATE_ONLY" = debuffs flagged for nameplates (incl. nameplate-only ones).
 
 L.C.nameplate = {
   enabled = true,
-  size = {130,26},
+  size = {182,32},
   point = {"CENTER"}, --relative to the nameplate base!
   scale = 1*UIParent:GetScale()*L.C.globalscale,--nameplates are not part of uiparent, they must be multiplied by uiparent scale!
   --healthbar
@@ -78,18 +75,18 @@ L.C.nameplate = {
       align = "CENTER",
       tag = "[oUF_SimpleConfig:classification][difficulty][name]|r",
     },
-    debuffHighlight = true,
+    debuffHighlight = false,
   },
   --raidmark
   raidmark = {
     enabled = true,
-    size = {18,18},
+    size = {26,26},
     point = {"CENTER","TOP",0,0},
   },
   --castbar
   castbar = {
     enabled = true,
-    size = {130,26},
+    size = {182,26},
     point = {"TOP","BOTTOM",0,-5},
     name = {
       enabled = true,
@@ -111,13 +108,29 @@ L.C.nameplate = {
     point = {"BOTTOMLEFT","TOPLEFT",0,5},
     num = 5,
     cols = 5,
-    size = 22,
+    size = 32,
     spacing = 5,
     initialAnchor = "TOPLEFT",
     growthX = "RIGHT",
     growthY = "UP",
-    disableCooldown = true,
-    filter = "HARMFUL|INCLUDE_NAME_PLATE_ONLY",
-    CustomFilter = CustomFilter
+    disableCooldown = false,
+    showDuration = false,
+    filter = "HARMFUL|PLAYER|INCLUDE_NAME_PLATE_ONLY",
+  },
+  --buffs
+  buffs = {
+    enabled = true,
+    point = {"LEFT","RIGHT",8,0},
+    num = 3,
+    cols = 3,
+    size = 28,
+    spacing = 5,
+    initialAnchor = "LEFT",
+    growthX = "RIGHT",
+    growthY = "DOWN",
+    disableCooldown = false,
+    showStealableBorder = true,
+    showDuration = false,
+    showBuffIndicator = true
   },
 }

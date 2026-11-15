@@ -46,7 +46,7 @@ L.C.pet = {
       align = "CENTER",
       tag = "[name]",
     },
-    debuffHighlight = true,
+    debuffHighlight = false,
   },
   --raidmark
   raidmark = {
@@ -90,6 +90,6 @@ L.C.pet = {
     initialAnchor = "TOPLEFT",
     growthX = "RIGHT",
     growthY = "DOWN",
-    disableCooldown = true,
+    disableCooldown = false,
   },
 }

@@ -38,6 +38,7 @@ L.C.target = {
     colorHealth = true,
     colorThreat = true,
     colorThreatInvers = true,
+    frequentUpdates = true,
     name = {
       enabled = true,
       points = {
@@ -53,7 +54,7 @@ L.C.target = {
       size = 16,
       tag = "[oUF_Simple:health]",
     },
-    debuffHighlight = true,
+    debuffHighlight = false,
   },
   --powerbar
   powerbar = {
@@ -61,18 +62,19 @@ L.C.target = {
     size = {265,5},
     point = {"TOP","BOTTOM",0,-4}, --if no relativeTo is given the frame base will be the relativeTo reference
     colorPower = true,
+    frequentUpdates = true,
   },
   --raidmark
   raidmark = {
     enabled = true,
-    size = {18,18},
+    size = {26,26},
     point = {"CENTER","TOP",0,0},
   },
   --castbar
   castbar = {
     enabled = true,
     size = {265,26},
-    point = {"BOTTOM","TOP",0,14},
+    point = {"BOTTOM","TOP",0,8},
     name = {
       enabled = true,
       points = {
@@ -93,26 +95,35 @@ L.C.target = {
   },
   buffs = {
     enabled = true,
-    point = {"BOTTOMLEFT","RIGHT",5,5},
+    point = {"LEFT","RIGHT",5,0},
     num = 32,
     cols = 8,
-    size = 22,
+    size = 32,
+    spacing = 5,
+    initialAnchor = "LEFT",
+    growthX = "RIGHT",
+    growthY = "DOWN",
+    disableCooldown = false,
+    showDuration = false,
+    showBuffBorder = true,
+    showStealableBorder = true,
+    showBuffIndicator = true,
+  },
+  debuffs = {
+    enabled = true,
+    point = {"BOTTOMLEFT","TOPLEFT",0,45},
+    num = 40,
+    cols = 8,
+    size = 40,
     spacing = 5,
     initialAnchor = "BOTTOMLEFT",
     growthX = "RIGHT",
     growthY = "UP",
-    disableCooldown = true,
-  },
-  debuffs = {
-    enabled = true,
-    point = {"TOPLEFT","RIGHT",5,-5},
-    num = 40,
-    cols = 8,
-    size = 22,
-    spacing = 5,
-    initialAnchor = "TOPLEFT",
-    growthX = "RIGHT",
-    growthY = "DOWN",
-    disableCooldown = true,
+    disableCooldown = false,
+    showDuration = false,
+    showDebuffBorder = true,
+    showDebuffIndicator = true,
+    dispelBorderStyle = Enum.CustomAuraButtonDispelTypeTextureStyle.BorderWithIcon,
+    filter = "HARMFUL|PLAYER",
   },
 }

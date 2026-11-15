@@ -16,7 +16,6 @@ local floor = floor
 --Forever: several unit APIs can return secret values, those must not be compared/tested
 local issecretvalue = issecretvalue or function() return false end
 
---tag method: oUF_SimpleConfig:status
 L.C.tagMethods["oUF_SimpleConfig:status"] = function(unit,...)
   local inCombat = UnitAffectingCombat(unit)
   if not issecretvalue(inCombat) and inCombat then
@@ -26,7 +25,6 @@ L.C.tagMethods["oUF_SimpleConfig:status"] = function(unit,...)
   end
 end
 
---tag method: oUF_SimpleConfig:classification
 L.C.tagMethods["oUF_SimpleConfig:classification"] = function(unit)
   local c = UnitClassification(unit)
   local l = UnitLevel(unit)
@@ -42,7 +40,5 @@ L.C.tagMethods["oUF_SimpleConfig:classification"] = function(unit)
     return '|cffff6666{E}|r '
   end
 end
---tag event: oUF_Simple:status
 L.C.tagEvents["oUF_SimpleConfig:status"] = "PLAYER_REGEN_DISABLED PLAYER_REGEN_ENABLED PLAYER_UPDATE_RESTING"
---tag event: oUF_Simple:status
 L.C.tagEvents["oUF_SimpleConfig:classification"] = "UNIT_CLASSIFICATION_CHANGED"

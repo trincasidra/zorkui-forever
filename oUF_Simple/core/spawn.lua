@@ -90,53 +90,44 @@ if L.F.CreateMouseoverStyle then
   oUF:Spawn("mouseover", A.."Mouseover")
 end
 
+--initial config for header children (runs in the restricted environment)
+--the header scale is set on the header itself, outside of the secure snippet
+local function HeaderInitialConfig(size)
+  return ([[
+    self:SetWidth(%d)
+    self:SetHeight(%d)
+  ]]):format(size[1], size[2])
+end
+
 --spawn party
 if L.F.CreatePartyStyle then
-  print('asd')
   oUF:SetActiveStyle(A.."Party")
-  --[[
-    local party = oUF:SpawnHeader("ColdParty", "SecurePartyHeaderTemplate",
-      --"showSolo", true,
-      'showPlayer', true,
-      'showParty', true,
-      'yOffset', -8,
-      'columnAnchorPoint', 'LEFT',
-      'columnSpacing', 15,
-      'groupBy', 'ASSIGNEDROLE',
-      'groupingOrder', 'TANK,HEALER,DAMAGER',
-    )
-  party:SetVisibility("custom [@raid6,exists] hide;show") --new with oUF 13/wow 12.0
-  party:SetParent(UIParent)
-  party:SetPoint("TOPLEFT", _G["ColdChatBG"], "TOPRIGHT", 8, 0)
-  ]]
+  local setup = L.C.party.setup
   local party = oUF:SpawnHeader(
     A.."PartyHeader",
-    L.C.party.setup.template,
-    "showPlayer",    L.C.party.setup.showPlayer,
-    "showParty",     L.C.party.setup.showParty,
-    "showRaid",      L.C.party.setup.showRaid,
-    "point",         L.C.party.setup.point,
-    "xOffset",       L.C.party.setup.xOffset,
-    "yOffset",       L.C.party.setup.yOffset,
-		'groupBy',       L.C.party.setup.groupBy,
-		'groupingOrder', L.C.party.setup.groupingOrder,
-    "oUF-initialConfigFunction", ([[
-      self:SetWidth(%d)
-      self:SetHeight(%d)
-      self:GetParent():SetScale(%f)
-    ]]):format(L.C.party.size[1], L.C.party.size[2], L.C.party.scale)
+    setup.template, --nil = SecureGroupHeaderTemplate (oUF default)
+    "showPlayer",    setup.showPlayer,
+    "showParty",     setup.showParty,
+    "showRaid",      setup.showRaid,
+    "showSolo",      setup.showSolo,
+    "point",         setup.point,
+    "xOffset",       setup.xOffset,
+    "yOffset",       setup.yOffset,
+    "groupBy",       setup.groupBy,
+    "groupingOrder", setup.groupingOrder,
+    "oUF-initialConfigFunction", HeaderInitialConfig(L.C.party.size)
   )
-  party:SetVisibility(L.C.party.setup.visibility)
+  party:SetScale(L.C.party.scale)
   party:SetPoint(unpack(L.C.party.point))
-  party:SetParent(UIParent)
-  print('ok')
+  --oUF 13+: headers are hidden until a visibility driver is registered
+  party:SetVisibility(setup.visibility)
 end
 
 --spawn boss frames
 if L.F.CreateBossStyle then
   oUF:SetActiveStyle(A.."Boss")
   local boss = {}
-  for i = 1, MAX_BOSS_FRAMES do
+  for i = 1, (MAX_BOSS_FRAMES or 5) do
     boss[i] = oUF:Spawn("boss"..i, A.."Boss"..i)
     if (i == 1) then
       boss[i]:SetPoint(unpack(L.C.boss.point))
@@ -149,29 +140,45 @@ end
 --spawn nameplates
 if L.F.CreateNamePlateStyle then
   oUF:SetActiveStyle(A.."Nameplate")
-  oUF:SpawnNamePlates(A, L.C.NamePlateCallback, L.C.NamePlateCVars)
+  local driver = oUF:SpawnNamePlates(A)
+  if driver then
+    if L.C.NamePlateCallback then
+      driver:SetAddedCallback(L.C.NamePlateCallback)
+    end
+    if L.C.NamePlateCVars then
+      --skip cvars that do not exist in this client (several were removed/renamed)
+      local cvars = {}
+      for name, value in next, L.C.NamePlateCVars do
+        if C_CVar.GetCVar(name) ~= nil then
+          cvars[name] = value
+        end
+      end
+      driver:SetCVars(cvars)
+    end
+  end
 end
 
 --spawn raid
 if L.F.CreateRaidStyle then
   oUF:SetActiveStyle(A.."Raid")
-  for i=1, NUM_RAID_GROUPS do
-    oUF:SpawnHeader(
+  local setup = L.C.raid.setup
+  for i = 1, (NUM_RAID_GROUPS or 8) do
+    local raid = oUF:SpawnHeader(
       A.."RaidHeader"..i,
-      L.C.raid.setup.template,
-      "showPlayer", L.C.raid.setup.showPlayer,
-      "showParty",  L.C.raid.setup.showParty,
-      "showRaid",   L.C.raid.setup.showRaid,
-      "point",      L.C.raid.setup.point,
-      "xOffset",    L.C.raid.setup.xOffset,
-      "yOffset",    L.C.raid.setup.yOffset,
+      setup.template,
+      "showPlayer",     setup.showPlayer,
+      "showParty",      setup.showParty,
+      "showRaid",       setup.showRaid,
+      "point",          setup.point,
+      "xOffset",        setup.xOffset,
+      "yOffset",        setup.yOffset,
       "groupFilter",    tostring(i),
       "unitsPerColumn", 5,
-      "oUF-initialConfigFunction", ([[
-        self:SetWidth(%d)
-        self:SetHeight(%d)
-        self:GetParent():SetScale(%f)
-      ]]):format(L.C.raid.size[1], L.C.raid.size[2], L.C.raid.scale)
-    ):SetPoint(unpack(L.C.raid.points[i])) --config needs to provide 8 point tables, one for each raid group
+      "oUF-initialConfigFunction", HeaderInitialConfig(L.C.raid.size)
+    )
+    raid:SetScale(L.C.raid.scale)
+    raid:SetPoint(unpack(L.C.raid.points[i])) --config needs to provide 8 point tables, one for each raid group
+    --oUF 13+: headers are hidden until a visibility driver is registered
+    raid:SetVisibility(setup.visibility)
   end
 end

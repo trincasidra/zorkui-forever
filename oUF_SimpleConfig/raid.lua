@@ -16,7 +16,7 @@ L.C.raid = {
   enabled = true,
   size = {110,26},
   points = { --list of 8 points, one for each raid group
-    {"TOPLEFT",20,-20},
+    {"CENTER",-800,200},
     {"TOP", "oUF_SimpleRaidHeader1", "BOTTOM", 0, -10},
     {"TOP", "oUF_SimpleRaidHeader2", "BOTTOM", 0, -10},
     {"TOP", "oUF_SimpleRaidHeader3", "BOTTOM", 0, -10},
@@ -34,6 +34,7 @@ L.C.raid = {
     colorReaction = true,
     colorHealth = true,
     colorThreat = true,
+    frequentUpdates = true,
     name = {
       enabled = true,
       points = {
@@ -44,7 +45,7 @@ L.C.raid = {
       align = "CENTER",
       tag = "[name][oUF_Simple:role]",
     },
-    debuffHighlight = true,
+    debuffHighlight = false,
   },
   --raidmark
   raidmark = {

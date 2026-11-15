@@ -36,7 +36,7 @@ L.C.focus = {
       align = "CENTER",
       tag = "[name]",
     },
-    debuffHighlight = true,
+    debuffHighlight = false,
   },
   --raidmark
   raidmark = {
@@ -87,6 +87,6 @@ L.C.focus = {
     initialAnchor = "TOPLEFT",
     growthX = "RIGHT",
     growthY = "DOWN",
-    disableCooldown = true,
+    disableCooldown = false,
   },
 }

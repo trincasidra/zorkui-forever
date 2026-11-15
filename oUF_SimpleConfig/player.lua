@@ -36,6 +36,7 @@ L.C.player = {
     colorClass = true,
     colorHealth = true,
     colorThreat = true,
+    frequentUpdates = true,
     name = {
       enabled = true,
       points = {
@@ -51,7 +52,7 @@ L.C.player = {
       size = 16,
       tag = "[oUF_Simple:health]",
     },
-    debuffHighlight = true,
+    debuffHighlight = false,
   },
   --powerbar
   powerbar = {
@@ -59,6 +60,7 @@ L.C.player = {
     size = {265,5},
     point = {"TOP","BOTTOM",0,-4}, --if no relativeTo is given the frame base will be the relativeTo reference
     colorPower = true,
+    frequentUpdates = true,
     power = {
       enabled = true,
       point = {"RIGHT",-2,0},
@@ -76,7 +78,7 @@ L.C.player = {
   castbar = {
     enabled = true,
     size = {265,26},
-    point = {"BOTTOM","TOP",0,14},
+    point = {"BOTTOM","TOP",0,8},
     --orientation = "VERTICAL",
     name = {
       enabled = true,
@@ -119,14 +121,18 @@ L.C.player = {
   },
   debuffs = {
     enabled = true,
-    point = {"TOPLEFT","RIGHT",5,-5},
+    point = {"BOTTOMRIGHT","TOPRIGHT",0,45},
     num = 40,
     cols = 8,
-    size = 22,
+    size = 40,
     spacing = 5,
-    initialAnchor = "TOPLEFT",
-    growthX = "RIGHT",
-    growthY = "DOWN",
-    disableCooldown = true,
+    initialAnchor = "BOTTOMRIGHT",
+    growthX = "LEFT",
+    growthY = "UP",
+    disableCooldown = false,
+    showDuration = false,
+    showDebuffBorder = true,
+    showDebuffIndicator = true,
+    dispelBorderStyle = Enum.CustomAuraButtonDispelTypeTextureStyle.BorderWithIcon
   },
 }

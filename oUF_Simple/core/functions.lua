@@ -8,7 +8,10 @@
 
 local A, L = ...
 
-local floor, unpack = floor, unpack
+local floor, unpack, type = floor, unpack, type
+
+--yikes, secrets! avoid touching them to  prevent taints
+local issecretvalue = issecretvalue or function() return false end
 
 --functions container
 L.F = {}
@@ -17,27 +20,6 @@ L.F = {}
 -- Functions
 -----------------------------
 
---NumberFormat
-local function NumberFormat(v)
-  if v > 1E10 then
-    return (floor(v/1E9)).."b"
-  elseif v > 1E9 then
-    return (floor((v/1E9)*10)/10).."b"
-  elseif v > 1E7 then
-    return (floor(v/1E6)).."m"
-  elseif v > 1E6 then
-    return (floor((v/1E6)*10)/10).."m"
-  elseif v > 1E4 then
-    return (floor(v/1E3)).."k"
-  elseif v > 1E3 then
-    return (floor((v/1E3)*10)/10).."k"
-  else
-    return v
-  end
-end
-L.F.NumberFormat = NumberFormat
-
---CalcFrameSize
 local function CalcFrameSize(numButtons,numCols,buttonWidth,buttonHeight,buttonMargin,framePadding)
   local numRows = ceil(numButtons/numCols)
   local frameWidth = numCols*buttonWidth + (numCols-1)*buttonMargin + 2*framePadding
@@ -45,7 +27,6 @@ local function CalcFrameSize(numButtons,numCols,buttonWidth,buttonHeight,buttonM
   return frameWidth, frameHeight
 end
 
---SetPoint
 local function SetPoint(self,relativeTo,point)
   --adjut the setpoint function to make it possible to reference a relativeTo object that is set on runtime and it not available on config init
   local a,b,c,d,e = unpack(point)
@@ -58,14 +39,12 @@ local function SetPoint(self,relativeTo,point)
   end
 end
 
---SetPoints
 local function SetPoints(self,relativeTo,points)
   for i, point in next, points do
     SetPoint(self,relativeTo,point)
   end
 end
 
---CreateBackdrop
 local function CreateBackdrop(self,relativeTo)
   local backdrop = L.C.backdrop
   local bd = CreateFrame("Frame", nil, self, BackdropTemplateMixin and "BackdropTemplate")
@@ -86,33 +65,38 @@ local function CreateIcon(self,layer,sublevel,size,point)
   return icon
 end
 
-local function ColorHealthbarOnThreat(self,unit)
-  if self.colorThreat and self.colorThreatInvers and unit and UnitThreatSituation("player", unit) == 3 then
-    self:SetStatusBarColor(unpack(L.C.colors.healthbar.threatInvers))
-    self.bg:SetVertexColor(unpack(L.C.colors.healthbar.threatInversBG))
-  elseif self.colorThreat and unit and UnitThreatSituation(unit) == 3 then
-    self:SetStatusBarColor(unpack(L.C.colors.healthbar.threat))
-    self.bg:SetVertexColor(unpack(L.C.colors.healthbar.threatBG))
+--UnitThreatSituation is sometimes secret
+local function GetThreatStatus(unit, mobUnit)
+  local status = UnitThreatSituation(unit, mobUnit)
+  if issecretvalue(status) then return end
+  return status
+end
+
+--don't pass .colorThreat to oUF, it will throw as soon as the threat state is secret.
+local function PostUpdateHealthColor(self, unit)
+  if not unit or not self.__colorThreat then return end
+  local colors = L.C.colors.healthbar
+  if self.__colorThreatInvers and GetThreatStatus("player", unit) == 3 then
+    self:SetStatusBarColor(unpack(colors.threatInvers))
+    self.bg:SetVertexColor(unpack(colors.threatInversBG))
+  elseif GetThreatStatus(unit) == 3 then
+    self:SetStatusBarColor(unpack(colors.threat))
+    self.bg:SetVertexColor(unpack(colors.threatBG))
+  elseif colors.defaultBG then
+    --reset the background in case it was tinted by a previous threat state
+    self.bg:SetVertexColor(unpack(colors.defaultBG))
   end
 end
 
---PostUpdateHealth
-local function PostUpdateHealth(self, unit, min, max)
-  ColorHealthbarOnThreat(self,unit)
-end
-
---UpdateThreat
-local function UpdateThreat(self,event,unit)
-  if event == "PLAYER_ENTER_COMBAT" or event == "PLAYER_LEAVE_COMBAT" then
-    --do natting
-  elseif self.unit ~= unit then
-    return
+local function UpdateThreat(self, event, unit)
+  if unit and unit ~= self.__unit then return end
+  local health = self.Health
+  if health and health.ForceUpdate then
+    health:ForceUpdate()
   end
-  self.Health:ForceUpdate()
 end
 L.F.UpdateThreat = UpdateThreat
 
---CreateText
 local function CreateText(self,font,size,outline,align,noshadow)
   local text = self:CreateFontString(nil, "ARTWORK") --"BORDER", "OVERLAY"
   text:SetFont(font or STANDARD_TEXT_FONT, size or 14, outline or "OUTLINE")
@@ -129,32 +113,21 @@ local function CreateText(self,font,size,outline,align,noshadow)
 end
 L.F.CreateText = CreateText
 
---AltPowerBarOverride
-local function AltPowerBarOverride(self, event, unit, powerType)
-  if self.unit ~= unit or powerType ~= "ALTERNATE" then return end
-  local ppmax = UnitPowerMax(unit, ALTERNATE_POWER_INDEX, true) or 0
-  local ppcur = UnitPower(unit, ALTERNATE_POWER_INDEX, true)
-  local _, r, g, b = GetUnitPowerBarTextureInfo(unit, 2)
-  local _, ppmin = UnitPowerBarID(unit)
-  local el = self.AlternativePower
-  el:SetMinMaxValues(ppmin or 0, ppmax)
-  el:SetValue(ppcur)
-  if b then
-    el:SetStatusBarColor(r, g, b)
-    if el.bg then
-      local mu = el.bg.multiplier or 0.3
-      el.bg:SetVertexColor(r*mu, g*mu, b*mu)
-    end
-  else
-    el:SetStatusBarColor(1, 0, 1)
-    if el.bg then
-      local mu = el.bg.multiplier or 0.3
-      el.bg:SetVertexColor(1*mu, 0*mu, 1*mu)
-    end
+--re-apply the alt power bar color
+local function AltPowerBarPostUpdate(self, unit)
+  local r, g, b = 1, 0, 1
+  local barID = unit and UnitPowerBarID(unit)
+  if barID and barID > 0 and GetUnitPowerBarTextureInfo then
+    local _, tr, tg, tb = GetUnitPowerBarTextureInfo(unit, 2)
+    if tb then r, g, b = tr, tg, tb end
+  end
+  self:SetStatusBarColor(r, g, b)
+  if self.bg then
+    local mu = self.bg.multiplier or 0.3
+    self.bg:SetVertexColor(r*mu, g*mu, b*mu)
   end
 end
 
---CreateAltPowerBar
 local function CreateAltPowerBar(self)
   if not self.cfg.altpowerbar or not self.cfg.altpowerbar.enabled then return end
   --statusbar
@@ -174,15 +147,14 @@ local function CreateAltPowerBar(self)
   --backdrop
   CreateBackdrop(s)
   --attributes
-  s.Override = AltPowerBarOverride
+  s.PostUpdate = AltPowerBarPostUpdate
   s.bg.multiplier = L.C.colors.bgMultiplier
   return s
 end
 L.F.CreateAltPowerBar = CreateAltPowerBar
 
---CreateAbsorbBar
+--like health the absorb bar cannot be disabled
 local function CreateAbsorbBar(self)
-  --like health the absorb bar cannot be disabled
   --statusbar
   local s = CreateFrame("StatusBar", nil, self.Health)
   s:SetAllPoints()
@@ -194,9 +166,8 @@ local function CreateAbsorbBar(self)
 end
 L.F.CreateAbsorbBar = CreateAbsorbBar
 
---CreateHealthBar
+--disabling the healthbar makes no sense, no check for enabled
 local function CreateHealthBar(self)
-  --disabling the healthbar makes no sense, no check for enabled
   --statusbar
   local s = CreateFrame("StatusBar", nil, self)
   s:SetStatusBarTexture(L.C.textures.statusbar)
@@ -227,23 +198,23 @@ local function CreateHealthBar(self)
   s.colorReaction = self.cfg.healthbar.colorReaction
   s.colorClass = self.cfg.healthbar.colorClass
   s.colorHealth = self.cfg.healthbar.colorHealth
-  s.colorThreat = self.cfg.healthbar.colorThreat
-  s.colorThreatInvers = self.cfg.healthbar.colorThreatInvers
+  s.frequentUpdates = self.cfg.healthbar.frequentUpdates or false
+  --threat coloring is done by the layout (secret-safe), see PostUpdateHealthColor
+  s.__colorThreat = self.cfg.healthbar.colorThreat
+  s.__colorThreatInvers = self.cfg.healthbar.colorThreatInvers
   s.bg.multiplier = L.C.colors.bgMultiplier
-  s.frequentUpdates = self.cfg.healthbar.frequentUpdates
   --hooks
-  s.PostUpdate = PostUpdateHealth
-  if s.colorThreat then
+  s.PostUpdateColor = PostUpdateHealthColor
+  if s.__colorThreat then
     self:RegisterEvent("PLAYER_REGEN_ENABLED", L.F.UpdateThreat, true)
     self:RegisterEvent("PLAYER_REGEN_DISABLED", L.F.UpdateThreat, true)
-    self:RegisterEvent("UNIT_THREAT_SITUATION_UPDATE", L.F.UpdateThreat, false)
-    self:RegisterEvent("UNIT_THREAT_LIST_UPDATE", L.F.UpdateThreat, false)
+    self:RegisterEvent("UNIT_THREAT_SITUATION_UPDATE", L.F.UpdateThreat)
+    self:RegisterEvent("UNIT_THREAT_LIST_UPDATE", L.F.UpdateThreat)
   end
   return s
 end
 L.F.CreateHealthBar = CreateHealthBar
 
---CreateHealingAll
 local function CreateHealingAll(self)
   local s = CreateFrame('StatusBar', nil, self.Health)
   s:SetPoint('TOP')
@@ -256,7 +227,6 @@ local function CreateHealingAll(self)
 end
 L.F.CreateHealingAll = CreateHealingAll
 
---CreateDamageAbsorb
 local function CreateDamageAbsorb(self)
   local s = CreateFrame('StatusBar', nil, self.Health)
   s:SetPoint('TOP')
@@ -269,7 +239,6 @@ local function CreateDamageAbsorb(self)
 end
 L.F.CreateDamageAbsorb = CreateDamageAbsorb
 
---CreateHealAbsorb
 local function CreateHealAbsorb(self)
   local s = CreateFrame('StatusBar', nil, self.Health)
   s:SetPoint('TOP')
@@ -283,7 +252,6 @@ local function CreateHealAbsorb(self)
 end
 L.F.CreateHealAbsorb = CreateHealAbsorb
 
---CreateOverDamageAbsorbIndicator
 local function CreateOverDamageAbsorbIndicator(self)
   local s = self.Health:CreateTexture(nil, "OVERLAY")
   s:SetPoint('TOP')
@@ -294,7 +262,6 @@ local function CreateOverDamageAbsorbIndicator(self)
 end
 L.F.CreateOverDamageAbsorbIndicator = CreateOverDamageAbsorbIndicator
 
---CreateOverHealAbsorbIndicator
 local function CreateOverHealAbsorbIndicator(self)
   local s = self.Health:CreateTexture(nil, "OVERLAY")
   s:SetPoint('TOP')
@@ -305,7 +272,6 @@ local function CreateOverHealAbsorbIndicator(self)
 end
 L.F.CreateOverHealAbsorbIndicator = CreateOverHealAbsorbIndicator
 
---CreateAdditionalPowerBar
 local function CreateAdditionalPowerBar(self)
   if not self.cfg.addpowerbar or not self.cfg.addpowerbar.enabled then return end
   --statusbar
@@ -328,7 +294,6 @@ local function CreateAdditionalPowerBar(self)
 end
 L.F.CreateAdditionalPowerBar = CreateAdditionalPowerBar
 
---CreateClassPower
 local function CreateClassPower(self)
   if not self or not self.cfg.classpower or not self.cfg.classpower.enabled then return end
   local ss = {}
@@ -355,7 +320,6 @@ local function CreateClassPower(self)
 end
 L.F.CreateClassPower = CreateClassPower
 
---CreatePowerBar
 local function CreatePowerBar(self)
   if not self.cfg.powerbar or not self.cfg.powerbar.enabled then return end
   --statusbar
@@ -377,6 +341,7 @@ local function CreatePowerBar(self)
   --attributes
   s.colorPower = self.cfg.powerbar.colorPower
   s.bg.multiplier = L.C.colors.bgMultiplier
+  s.frequentUpdates = self.cfg.powerbar.frequentUpdates or false
   return s
 end
 L.F.CreatePowerBar = CreatePowerBar
@@ -391,17 +356,27 @@ local function CreateCostPrediction(self)
 end
 L.F.CreateCostPrediction = CreateCostPrediction
 
-local function SetCastBarColorShielded(self)
-  self.__owner:SetStatusBarColor(unpack(L.C.colors.castbar.shielded))
-  self.__owner.bg:SetVertexColor(unpack(L.C.colors.castbar.shieldedBG))
+--enemy casts are either secret or boolean, so we can't set shield from "notInterruptible"
+local function UpdateCastBarShield(castbar, notInterruptible)
+  local overlay, overlayBG = castbar.ShieldOverlay, castbar.ShieldOverlayBG
+  if not overlay then return end
+  if issecretvalue(notInterruptible) or type(notInterruptible) == "boolean" then
+    overlay:SetAlphaFromBoolean(notInterruptible, 1, 0)
+    overlayBG:SetAlphaFromBoolean(notInterruptible, 1, 0)
+  else
+    overlay:SetAlpha(0)
+    overlayBG:SetAlpha(0)
+  end
 end
 
-local function SetCastBarColorDefault(self)
-  self.__owner:SetStatusBarColor(unpack(L.C.colors.castbar.default))
-  self.__owner.bg:SetVertexColor(unpack(L.C.colors.castbar.defaultBG))
+local function CastBarPostCastStart(self, unit, spellID, notInterruptible)
+  UpdateCastBarShield(self, notInterruptible)
 end
 
---CreateCastBar
+local function CastBarPostCastInterruptible(self, unit, spellID, notInterruptible)
+  UpdateCastBarShield(self, notInterruptible)
+end
+
 local function CreateCastBar(self)
   if not self.cfg.castbar or not self.cfg.castbar.enabled then return end
   --statusbar
@@ -432,16 +407,24 @@ local function CreateCastBar(self)
       i:SetTexCoord(0.1, 0.9, 0.1, 0.9)
     end
     s.Icon = i
-    --backdrop (for the icon)
-    CreateBackdrop(s,i)
+    --backdrop (for the icon), this somehow taints, skipping for now
+    --CreateBackdrop(s,s.Icon)
   end
-  --shield
-  local shield = s:CreateTexture(nil,"BACKGROUND",nil,-8)
-  shield.__owner = s
-  s.Shield = shield
-  --use a trick here...we use the show/hide on the shield texture to recolor the castbar
-  hooksecurefunc(shield,"Show",SetCastBarColorShielded)
-  hooksecurefunc(shield,"Hide",SetCastBarColorDefault)
+  --use SetAlphaFromBoolean to be able to use secrets
+  local shield = s:CreateTexture(nil,"ARTWORK",nil,1)
+  shield:SetTexture(L.C.textures.statusbar)
+  shield:SetAllPoints(s:GetStatusBarTexture())
+  shield:SetVertexColor(unpack(L.C.colors.castbar.shielded))
+  shield:SetAlpha(0)
+  s.ShieldOverlay = shield
+  local shieldBG = s:CreateTexture(nil,"BACKGROUND",nil,1)
+  shieldBG:SetTexture(L.C.textures.statusbar)
+  shieldBG:SetAllPoints()
+  shieldBG:SetVertexColor(unpack(L.C.colors.castbar.shieldedBG))
+  shieldBG:SetAlpha(0)
+  s.ShieldOverlayBG = shieldBG
+  s.PostCastStart = CastBarPostCastStart
+  s.PostCastInterruptible = CastBarPostCastInterruptible
   --text
   if self.cfg.castbar.name and self.cfg.castbar.name.enabled then
     local cfg = self.cfg.castbar.name
@@ -463,7 +446,6 @@ local function CreateRaidMark(self)
 end
 L.F.CreateRaidMark = CreateRaidMark
 
---CreateNameText
 local function CreateNameText(self)
   if not self.cfg.healthbar or not self.cfg.healthbar.name or not self.cfg.healthbar.name.enabled then return end
   local cfg = self.cfg.healthbar.name
@@ -477,11 +459,11 @@ local function CreateNameText(self)
 end
 L.F.CreateNameText = CreateNameText
 
---CreateHealthText
 local function CreateHealthText(self)
   if not self.cfg.healthbar or not self.cfg.healthbar.health or not self.cfg.healthbar.health.enabled then return end
   local cfg = self.cfg.healthbar.health
   local text = CreateText(self.rAbsorbBar or self.Health,cfg.font,cfg.size,cfg.outline,cfg.align,cfg.noshadow)
+  text.frequentUpdates = self.cfg.healthbar.frequentUpdates or false
   if cfg.points then
     SetPoints(text,self.rAbsorbBar or self.Health,cfg.points)
   else
@@ -491,11 +473,11 @@ local function CreateHealthText(self)
 end
 L.F.CreateHealthText = CreateHealthText
 
---CreatePowerText
 local function CreatePowerText(self)
   if not self.cfg.powerbar or not self.cfg.powerbar.power or not self.cfg.powerbar.power.enabled then return end
   local cfg = self.cfg.powerbar.power
   local text = CreateText(self.Power,cfg.font,cfg.size,cfg.outline,cfg.align,cfg.noshadow)
+  text.frequentUpdates = self.cfg.powerbar.frequentUpdates or false
   if cfg.points then
     SetPoints(text,self.Power,cfg.points)
   else
@@ -505,91 +487,114 @@ local function CreatePowerText(self)
 end
 L.F.CreatePowerText = CreatePowerText
 
---PostCreateAura
-local function PostCreateAura(self,button)
+local function PostCreateAuraButton(element, button)
+  local size = element.size or 16
   local bg = button:CreateTexture(nil,"BACKGROUND",nil,-8)
   bg:SetTexture(L.C.textures.aura)
   bg:SetVertexColor(0,0,0)
-  bg:SetPoint("TOPLEFT", -self.size/4, self.size/4)
-  bg:SetPoint("BOTTOMRIGHT", self.size/4, -self.size/4)
-  button.icon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
-  button.count:SetFont(STANDARD_TEXT_FONT, self.size/1.65, "OUTLINE")
-  button.count:SetShadowColor(0,0,0,0.6)
-  button.count:SetShadowOffset(1,-1)
-  button.count:ClearAllPoints()
-  button.count:SetPoint("BOTTOMRIGHT", self.size/10, -self.size/10)
-  button:SetFrameStrata("LOW")
+  bg:SetPoint("TOPLEFT", -size/4, size/4)
+  bg:SetPoint("BOTTOMRIGHT", size/4, -size/4)
+  button.Background = bg
+  if button.Icon then
+    button.Icon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
+  end
+  if button.Count then
+    button.Count:SetFont(STANDARD_TEXT_FONT, size/1.65, "OUTLINE")
+    button.Count:SetShadowColor(0,0,0,0.6)
+    button.Count:SetShadowOffset(1,-1)
+    button.Count:ClearAllPoints()
+    button.Count:SetPoint("BOTTOMRIGHT", size/10, -size/10)
+  end
 end
 
---CreateBuffs
+--auras are now client-side AuraContainers
+local function CreateAuraElement(self, cfg, defaultFilter)
+  --oUF renamed CreateAuras to CreateAurasElement (keep old as fallback just in case)
+  local create = self.CreateAurasElement or self.CreateAuras
+  if not create then return end
+  local width, height = CalcFrameSize(cfg.num, cfg.cols, cfg.size, cfg.size, cfg.spacing, 0)
+  local element = create(self, {
+    initialAnchor = cfg.initialAnchor or "TOPLEFT",
+    growthX = cfg.growthX or "RIGHT",
+    growthY = cfg.growthY or "DOWN",
+    layoutLimit = width, --wrap after cfg.cols buttons
+  })
+  element:SetSize(width, height)
+  SetPoint(element, self, cfg.point)
+  --duration format
+  local secondsFormatter = C_StringUtil.CreateSecondsFormatter();
+  secondsFormatter:SetDefaultAbbreviation(Enum.SecondsFormatterAbbreviation.None);
+  secondsFormatter:SetStripIntervalWhitespace(Enum.SecondsFormatterIntervalWhitespace.Strip);
+  secondsFormatter:SetMillisecondsThreshold(5);
+  --button / group options (see oUF/elements/auras.lua)
+  element.size = cfg.size
+  element.elementSpacing = cfg.spacing
+  element.lineSpacing = cfg.spacing
+  element.maxFrameCount = cfg.num
+  element.showCount = true
+  element.durationFormatter = secondsFormatter
+  element.showDuration = cfg.showDuration
+  element.disableCooldown = cfg.disableCooldown
+  element.showBuffBorder = cfg.showBuffBorder
+  element.showDebuffBorder = cfg.showDebuffBorder
+  element.showStealableBorder = cfg.showStealableBorder
+  element.tooltipAnchor = cfg.tooltipAnchor
+  element.PostCreateButton = cfg.PostCreateButton or PostCreateAuraButton
+  element:AddGroup(cfg.filter or defaultFilter)
+  return element
+end
+
 local function CreateBuffs(self)
   if not self.cfg.buffs or not self.cfg.buffs.enabled then return end
-  local cfg = self.cfg.buffs
-  local frame = CreateFrame("Frame", nil, self)
-  SetPoint(frame,self,cfg.point)
-  frame.num = cfg.num
-  frame.size = cfg.size
-  frame.spacing = cfg.spacing
-  frame.initialAnchor = cfg.initialAnchor
-  frame["growth-x"] = cfg.growthX
-  frame["growth-y"] = cfg.growthY
-  frame.disableCooldown = cfg.disableCooldown
-  frame.filter = cfg.filter
-  frame.CustomFilter = cfg.CustomFilter
-  frame.PostCreateIcon = cfg.PostCreateAura or PostCreateAura
-  --frame.PostUpdateIcon = PostUpdateBuff
-  frame:SetSize(CalcFrameSize(cfg.num,cfg.cols,cfg.size,cfg.size,cfg.spacing,0))
-  --local t = frame:CreateTexture(nil,"BACKGROUND",nil,-8)
-  --t:SetAllPoints()
-  --t:SetColorTexture(0,1,0,0.2)
-  return frame
+  return CreateAuraElement(self, self.cfg.buffs, "HELPFUL")
 end
 L.F.CreateBuffs = CreateBuffs
 
---CreateDebuffs
 local function CreateDebuffs(self)
   if not self.cfg.debuffs or not self.cfg.debuffs.enabled then return end
-  local cfg = self.cfg.debuffs
-  local frame = CreateFrame("Frame", nil, self)
-  SetPoint(frame,self,cfg.point)
-  frame.num = cfg.num
-  frame.size = cfg.size
-  frame.spacing = cfg.spacing
-  frame.initialAnchor = cfg.initialAnchor
-  frame["growth-x"] = cfg.growthX
-  frame["growth-y"] = cfg.growthY
-  frame.disableCooldown = cfg.disableCooldown
-  frame.filter = cfg.filter
-  frame.CustomFilter = cfg.CustomFilter
-  frame.PostCreateIcon = cfg.PostCreateAura or PostCreateAura
-  --frame.PostUpdateIcon = PostUpdateDebuff
-  frame:SetSize(CalcFrameSize(cfg.num,cfg.cols,cfg.size,cfg.size,cfg.spacing,0))
-  --local t = frame:CreateTexture(nil,"BACKGROUND",nil,-8)
-  --t:SetAllPoints()
-  --t:SetColorTexture(1,0,0,0.2)
-  return frame
+  return CreateAuraElement(self, self.cfg.debuffs, "HARMFUL")
 end
 L.F.CreateDebuffs = CreateDebuffs
 
---SetupHeader
+local function UnitFrameOnEnter(self)
+  if GameTooltip:IsForbidden() then return end
+  local unit = self.__unit or SecureButton_GetUnit(self)
+  if not unit then return end
+  GameTooltip_SetDefaultAnchor(GameTooltip, self)
+  GameTooltip:SetUnit(unit)
+end
+
+local function UnitFrameOnLeave(self)
+  if GameTooltip:IsForbidden() then return end
+  GameTooltip:FadeOut()
+end
+
 local function SetupHeader(self)
   if not self.settings.setupHeader then return end
-  self:RegisterForClicks("AnyDown")
-  self:SetScript("OnEnter", UnitFrame_OnEnter)
-  self:SetScript("OnLeave", UnitFrame_OnLeave)
+  --group header children are created by the secure header, possibly in combat, and already
+  --have their click handling set up by the template/oUF. 
+  local parent = self:GetParent()
+  local isHeaderChild = parent and parent.GetAttribute and parent:GetAttribute("oUF-headerType")
+  --RegisterForClicks is protected, only call it on frames created via oUF:Spawn (at load time)
+  if not isHeaderChild and not InCombatLockdown() then
+    self:RegisterForClicks("AnyDown")
+  end
+  --HookScript as header children inherit SecureHandlerEnterLeaveTemplate
+  self:HookScript("OnEnter", UnitFrameOnEnter)
+  self:HookScript("OnLeave", UnitFrameOnLeave)
 end
 L.F.SetupHeader = SetupHeader
 
---SetupFrame
 local function SetupFrame(self)
   if not self.settings.setupFrame then return end
   self:SetSize(unpack(self.cfg.size))
+  --nameplate unit frames come with SetAllPoints() from oUF, clear it or the size is ignored
+  self:ClearAllPoints()
   SetPoint(self,nil,self.cfg.point)
   self:SetScale(self.cfg.scale)
 end
 L.F.SetupFrame = SetupFrame
 
---CreateDragFrame
 local function CreateDragFrame(self)
   if not self.settings.createDrag then return end
   rLib:CreateDragFrame(self, L.dragFrames, -2, true)

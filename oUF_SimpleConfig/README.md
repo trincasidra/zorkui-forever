@@ -183,8 +183,10 @@ Classbar element for combo points, chi, holy power, etc. Makes sense for the pla
 * **growthX**: type:STRING, grow direction x-axis. "LEFT" or "RIGHT"
 * **growthY**: type:STRING, grow direction y-axis. "UP" or "DOWN"
 * **disableCooldown**: type:BOOLEAN, disable/enable cooldown spiral
-* **filter**: type:STRING, Unit aura filter. Defaults to "HELPFUL" on buffs and "HARMFUL" on debuffs.
-* **CustomFilter**: type:FUNCTION, Custom filter function to filter the UnitAura result for specific icons
+* **filter**: type:STRING, aura filter handled by the client (e.g. "HARMFUL|PLAYER", "HELPFUL|RAID"). Defaults to "HELPFUL" on buffs and "HARMFUL" on debuffs.
+* **showDuration**, **showBuffBorder**, **showDebuffBorder**, **showStealableBorder**: type:BOOLEAN, optional oUF 14 aura button widgets
+* **PostCreateButton**: type:FUNCTION, optional `function(element, button)` to style aura buttons (replaces PostCreateAura)
+* ~~CustomFilter~~: removed. With oUF 14 / WoW Forever aura data is secret, auras are filtered by the client through **filter** only.
 
 ### Debuffs attributes
 
@@ -198,8 +200,10 @@ Classbar element for combo points, chi, holy power, etc. Makes sense for the pla
 * **growthX**: type:STRING, grow direction x-axis. "LEFT" or "RIGHT"
 * **growthY**: type:STRING, grow direction y-axis. "UP" or "DOWN"
 * **disableCooldown**: type:BOOLEAN, disable/enable cooldown spiral
-* **filter**: type:STRING, Unit aura filter. Defaults to "HELPFUL" on buffs and "HARMFUL" on debuffs.
-* **CustomFilter**: type:FUNCTION, Custom filter function to filter the UnitAura result for specific icons. Must return true or false.
+* **filter**: type:STRING, aura filter handled by the client (e.g. "HARMFUL|PLAYER", "HELPFUL|RAID"). Defaults to "HELPFUL" on buffs and "HARMFUL" on debuffs.
+* **showDuration**, **showBuffBorder**, **showDebuffBorder**, **showStealableBorder**: type:BOOLEAN, optional oUF 14 aura button widgets
+* **PostCreateButton**: type:FUNCTION, optional `function(element, button)` to style aura buttons (replaces PostCreateAura)
+* ~~CustomFilter~~: removed. With oUF 14 / WoW Forever aura data is secret, auras are filtered by the client through **filter** only.
 
 ## Special cases
 
@@ -327,4 +331,4 @@ Chat command to print the values of a specific cvar
 
 ```lua
 /run local cv = "nameplateShowAll"; print(cv, "default", GetCVarDefault(cv), "saved", GetCVar(cv))
-```
+```

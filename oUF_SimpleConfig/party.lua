@@ -15,7 +15,7 @@ local A, L = ...
 L.C.party = {
   enabled = true,
   size = {180,26},
-  point = {"CENTER",-200,-200},
+  point = {"CENTER",-800,200},
   scale = 1*L.C.globalscale,
   --healthbar
   healthbar = {
@@ -25,6 +25,7 @@ L.C.party = {
     colorReaction = true,
     colorHealth = true,
     colorThreat = true,
+    frequentUpdates = true,
     name = {
       enabled = true,
       points = {
@@ -40,7 +41,7 @@ L.C.party = {
       size = 16,
       tag = "[oUF_Simple:health]",
     },
-    debuffHighlight = true,
+    debuffHighlight = false,
   },
   --powerbar
   powerbar = {
@@ -58,15 +59,19 @@ L.C.party = {
   --debuffs
   debuffs = {
     enabled = true,
-    point = {"LEFT","RIGHT",5,0},
+    point = {"LEFT","RIGHT",10,0},
     num = 5,
     cols = 5,
-    size = 26,
+    size = 42,
     spacing = 5,
     initialAnchor = "TOPLEFT",
     growthX = "RIGHT",
     growthY = "DOWN",
-    disableCooldown = true,
+    disableCooldown = false,
+    showDuration = false,
+    showDebuffBorder = true,
+    showDebuffIndicator = true,
+    dispelBorderStyle = Enum.CustomAuraButtonDispelTypeTextureStyle.BorderWithIcon
   },
   setup = {
     template = nil,
@@ -76,6 +81,6 @@ L.C.party = {
     showRaid = false,
     point = "TOP",
     xOffset = 0,
-    yOffset = -14,
+    yOffset = -28,
   },
 }
