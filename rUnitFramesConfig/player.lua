@@ -114,7 +114,7 @@ L.C.player = {
   },
   classpower = {
     enabled = true,
-    point = {"LEFT","RIGHT",72,0},
+    point = {"LEFT","RIGHT",70,5},
     texture = L.C.textures.statusbar,
     size = {20,15},
     padding = 5
@@ -133,6 +133,6 @@ L.C.player = {
     showDuration = false,
     showDebuffBorder = true,
     showDebuffIndicator = true,
-    dispelBorderStyle = Enum.CustomAuraButtonDispelTypeTextureStyle.BorderWithIcon
+    dispelBorderStyle = Enum.CustomAuraButtonDispelTypeTextureStyle.Border
   },
 }

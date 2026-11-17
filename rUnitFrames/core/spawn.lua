@@ -96,6 +96,7 @@ local function HeaderInitialConfig(size)
   return ([[
     self:SetWidth(%d)
     self:SetHeight(%d)
+    self:SetAttribute("*type2", "togglemenu")
   ]]):format(size[1], size[2])
 end
 

@@ -71,7 +71,7 @@ L.C.party = {
     showDuration = false,
     showDebuffBorder = true,
     showDebuffIndicator = true,
-    dispelBorderStyle = Enum.CustomAuraButtonDispelTypeTextureStyle.BorderWithIcon
+    dispelBorderStyle = Enum.CustomAuraButtonDispelTypeTextureStyle.Border
   },
   setup = {
     template = nil,

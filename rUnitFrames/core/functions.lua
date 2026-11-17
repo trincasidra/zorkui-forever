@@ -57,6 +57,35 @@ local function CreateBackdrop(self,relativeTo)
   return bd
 end
 
+local function CreateIconBackdrop(parent, icon)
+  local backdrop = L.C.backdrop
+  local inset = backdrop.inset or 5
+  local iconWidth, iconHeight = icon:GetSize()
+  local point, relativeTo, relativePoint, x, y = icon:GetPoint(1)
+  if not point then return end
+
+  local xOffset, yOffset = 0, 0
+  if point:find("LEFT", 1, true) then
+    xOffset = -inset
+  elseif point:find("RIGHT", 1, true) then
+    xOffset = inset
+  end
+  if point:find("TOP", 1, true) then
+    yOffset = inset
+  elseif point:find("BOTTOM", 1, true) then
+    yOffset = -inset
+  end
+
+  local frame = CreateFrame("Frame", nil, parent, BackdropTemplateMixin and "BackdropTemplate")
+  frame:SetFrameLevel(math.max(0, parent:GetFrameLevel() - 1))
+  frame:SetSize(iconWidth + inset * 2, iconHeight + inset * 2)
+  frame:SetPoint(point, relativeTo or parent, relativePoint or point, (x or 0) + xOffset, (y or 0) + yOffset)
+  frame:SetBackdrop(backdrop)
+  frame:SetBackdropColor(unpack(backdrop.bgColor))
+  frame:SetBackdropBorderColor(unpack(backdrop.edgeColor))
+  return frame
+end
+
 --CreateIcon
 local function CreateIcon(self,layer,sublevel,size,point)
   local icon = self:CreateTexture(nil,layer,nil,sublevel)
@@ -398,7 +427,7 @@ local function CreateCastBar(self)
   --icon for player and target only
   if self.cfg.castbar.icon and self.cfg.castbar.icon.enabled then
     --icon
-    local i = s:CreateTexture(nil,"BACKGROUND",nil,-8)
+    local i = s:CreateTexture(nil,"ARTWORK",nil,-8)
     i:SetSize(unpack(self.cfg.castbar.icon.size))
     SetPoint(i,s,self.cfg.castbar.icon.point)
     if self.cfg.castbar.icon.texCoord then
@@ -407,8 +436,8 @@ local function CreateCastBar(self)
       i:SetTexCoord(0.1, 0.9, 0.1, 0.9)
     end
     s.Icon = i
-    --backdrop (for the icon), this somehow taints, skipping for now
-    --CreateBackdrop(s,s.Icon)
+    -- Anchor the backdrop to the castbar, not the icon texture, to avoid taint.
+    s.IconBackdrop = CreateIconBackdrop(s, i)
   end
   --use SetAlphaFromBoolean to be able to use secrets
   local shield = s:CreateTexture(nil,"ARTWORK",nil,1)
@@ -495,6 +524,11 @@ local function PostCreateAuraButton(element, button)
   bg:SetPoint("TOPLEFT", -size/4, size/4)
   bg:SetPoint("BOTTOMRIGHT", size/4, -size/4)
   button.Background = bg
+  if button.Border then
+    button.Border:ClearAllPoints()
+    button.Border:SetPoint("TOPLEFT", -size/4, size/4)
+    button.Border:SetPoint("BOTTOMRIGHT", size/4, -size/4)
+  end
   if button.Icon then
     button.Icon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
   end
@@ -504,6 +538,10 @@ local function PostCreateAuraButton(element, button)
     button.Count:SetShadowOffset(1,-1)
     button.Count:ClearAllPoints()
     button.Count:SetPoint("BOTTOMRIGHT", size/10, -size/10)
+  end
+  local duration = button.Time or button.Duration
+  if duration and element.showDuration == false then
+    duration:Hide()
   end
 end
 
@@ -533,14 +571,18 @@ local function CreateAuraElement(self, cfg, defaultFilter)
   element.maxFrameCount = cfg.num
   element.showCount = true
   element.durationFormatter = secondsFormatter
-  element.showDuration = cfg.showDuration
+  element.showDuration = cfg.showDuration == true
   element.disableCooldown = cfg.disableCooldown
   element.showBuffBorder = cfg.showBuffBorder
   element.showDebuffBorder = cfg.showDebuffBorder
+  element.dispelBorderStyle = cfg.dispelBorderStyle or Enum.CustomAuraButtonDispelTypeTextureStyle.Border
   element.showStealableBorder = cfg.showStealableBorder
   element.tooltipAnchor = cfg.tooltipAnchor
   element.PostCreateButton = cfg.PostCreateButton or PostCreateAuraButton
-  element:AddGroup(cfg.filter or defaultFilter)
+  element:AddGroup(cfg.filter or defaultFilter, {
+    showDuration = cfg.showDuration == true,
+    dispelBorderStyle = element.dispelBorderStyle,
+  })
   return element
 end
 
@@ -571,12 +613,8 @@ end
 
 local function SetupHeader(self)
   if not self.settings.setupHeader then return end
-  --group header children are created by the secure header, possibly in combat, and already
-  --have their click handling set up by the template/oUF. 
-  local parent = self:GetParent()
-  local isHeaderChild = parent and parent.GetAttribute and parent:GetAttribute("oUF-headerType")
-  --RegisterForClicks is protected, only call it on frames created via oUF:Spawn (at load time)
-  if not isHeaderChild and not InCombatLockdown() then
+  --Group children are secure too; register their click buttons whenever out of combat.
+  if not InCombatLockdown() then
     self:RegisterForClicks("AnyDown")
   end
   --HookScript as header children inherit SecureHandlerEnterLeaveTemplate
