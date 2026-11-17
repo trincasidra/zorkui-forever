@@ -1,0 +1,7 @@
+## Interface: 16001
+## Title: rFader
+## Author: trincasidra
+## Notes: Hover fading for action bars and status bars
+
+config.lua
+core.lua

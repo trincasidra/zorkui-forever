@@ -1,0 +1,7 @@
+## Interface: 16001
+## Title: rStyle
+## Author: trincasidra
+## Notes: Button and aura button styling
+## RequiredDeps: rUnitFramesConfig
+
+core.lua
