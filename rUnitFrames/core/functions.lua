@@ -546,9 +546,16 @@ local function PostCreateAuraButton(element, button)
     button.Count:ClearAllPoints()
     button.Count:SetPoint("BOTTOMRIGHT", size/10, -size/10)
   end
-  local duration = button.Time or button.Duration
-  if duration and element.showDuration == false then
-    duration:Hide()
+  if element.showDuration == false then
+    local duration = button.GetDurationText and button:GetDurationText()
+      or button.Time or button.Duration
+    if duration then duration:Hide() end
+
+    local cooldown = button.GetDurationCooldown and button:GetDurationCooldown()
+      or button.Cooldown
+    if cooldown and cooldown.SetHideCountdownNumbers then
+      cooldown:SetHideCountdownNumbers(true)
+    end
   end
 end
 
