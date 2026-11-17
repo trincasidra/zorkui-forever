@@ -57,12 +57,19 @@ local function CreateBackdrop(self,relativeTo)
   return bd
 end
 
-local function CreateIconBackdrop(parent, icon)
+local function CreateIconBackdrop(parent, iconSize, iconPoint)
   local backdrop = L.C.backdrop
   local inset = backdrop.inset or 5
-  local iconWidth, iconHeight = icon:GetSize()
-  local point, relativeTo, relativePoint, x, y = icon:GetPoint(1)
+  local iconWidth, iconHeight = unpack(iconSize)
+  local point, relativeTo, relativePoint, x, y = unpack(iconPoint)
   if not point then return end
+
+  if not relativeTo then
+    relativeTo, relativePoint = parent, point
+  elseif type(relativeTo) == "string" and not _G[relativeTo] then
+    x, y = relativePoint, x
+    relativePoint, relativeTo = relativeTo, parent
+  end
 
   local xOffset, yOffset = 0, 0
   if point:find("LEFT", 1, true) then
@@ -437,7 +444,7 @@ local function CreateCastBar(self)
     end
     s.Icon = i
     -- Anchor the backdrop to the castbar, not the icon texture, to avoid taint.
-    s.IconBackdrop = CreateIconBackdrop(s, i)
+    s.IconBackdrop = CreateIconBackdrop(s, self.cfg.castbar.icon.size, self.cfg.castbar.icon.point)
   end
   --use SetAlphaFromBoolean to be able to use secrets
   local shield = s:CreateTexture(nil,"ARTWORK",nil,1)
