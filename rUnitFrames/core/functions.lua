@@ -145,6 +145,7 @@ local function CreateText(self,font,size,outline,align,noshadow)
   text:SetText("Bugfix")
   text:SetMaxLines(1)
   text:SetHeight(text:GetStringHeight())
+  text:SetText("")
   return text
 end
 L.F.CreateText = CreateText

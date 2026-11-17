@@ -46,7 +46,7 @@ L.C.target = {
         {"TOPRIGHT",-2,10},
       },
       size = 16,
-      tag = "[rUnitFramesConfig:classification][difficulty][name]|r[rUnitFramesConfig:pvpStatus]",
+      tag = "[rUnitFramesConfig:pvpStatus<$ ][rUnitFramesConfig:classification][difficulty][name]|r",
     },
     health = {
       enabled = true,

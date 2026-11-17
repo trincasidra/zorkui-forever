@@ -131,6 +131,9 @@ function rLib:CreateFrameFader(frame, faderConfig)
     --I know setting the alpha on a hidden frame does not really make sense but we need to set the fader to "out"
     --sadly a delay on the OnHide is impossible. we get the benefit of the fadeIn though.
     frame:HookScript("OnHide", OnHide)
+    if frame:IsShown() then
+      L:StartFadeIn(frame)
+    end
   else
     frame:EnableMouse(true)
     frame:HookScript("OnEnter", FrameHandler)

@@ -33,7 +33,7 @@ L.C.party = {
         {"TOPRIGHT",-2,10},
       },
       size = 17,
-      tag = "[name][rUnitFrames:leader][rUnitFrames:role][rUnitFramesConfig:pvpStatus]",
+      tag = "[rUnitFramesConfig:pvpStatus<$ ][name][rUnitFrames:leader][rUnitFrames:role]",
     },
     health = {
       enabled = true,

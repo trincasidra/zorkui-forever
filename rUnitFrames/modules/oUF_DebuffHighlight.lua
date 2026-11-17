@@ -87,7 +87,7 @@ local function Reset(self)
 end
 
 local function Update(self, event, unit)
-  if not unit or unit ~= self.__unit or not self.DebuffHighlightFilter then return end
+  if not unit or unit ~= self.__unit or self.DebuffHighlightFilter == nil then return end
   local filter = self.DebuffHighlightFilter and FILTER_PLAYER_CAN_DISPEL or FILTER_HAS_DISPEL_TYPE
   local ids = GetUnitAuraInstanceIDs(unit, filter, 1)
   local auraInstanceID = ids and ids[1]

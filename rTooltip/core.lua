@@ -9,6 +9,7 @@
 local A, L = ...
 
 local unpack, type = unpack, type
+local issecretvalue = issecretvalue or function() return false end
 local RAID_CLASS_COLORS, FACTION_BAR_COLORS, ICON_LIST = RAID_CLASS_COLORS, FACTION_BAR_COLORS, ICON_LIST
 local GameTooltip, GameTooltipStatusBar = GameTooltip, GameTooltipStatusBar
 local GameTooltipTextRight1, GameTooltipTextRight2, GameTooltipTextRight3, GameTooltipTextRight4, GameTooltipTextRight5, GameTooltipTextRight6, GameTooltipTextRight7, GameTooltipTextRight8 = GameTooltipTextRight1, GameTooltipTextRight2, GameTooltipTextRight3, GameTooltipTextRight4, GameTooltipTextRight5, GameTooltipTextRight6, GameTooltipTextRight7, GameTooltipTextRight8
@@ -59,29 +60,42 @@ local function GetHexColor(color)
 end
 
 local function GetTarget(unit)
-  if UnitIsUnit(unit, "player") then
+  if not unit or issecretvalue(unit) then return "Unknown" end
+  local isPlayerUnit = UnitIsUnit(unit, "player")
+  if issecretvalue(isPlayerUnit) then return "Unknown" end
+  if isPlayerUnit then
     return ("|cffff0000%s|r"):format("<YOU>")
-  elseif UnitIsPlayer(unit) then
-    local _, class = UnitClass(unit)
-    return ("|cff%s%s|r"):format(classColorHex[class], UnitName(unit))
-  elseif UnitReaction(unit, "player") then
-    return ("|cff%s%s|r"):format(factionColorHex[UnitReaction(unit, "player")], UnitName(unit))
-  else
-    return ("|cffffffff%s|r"):format(UnitName(unit))
   end
+  local isPlayer = UnitIsPlayer(unit)
+  if issecretvalue(isPlayer) then return "Unknown" end
+  if isPlayer then
+    local _, class = UnitClass(unit)
+    local name = UnitName(unit)
+    if issecretvalue(class) or issecretvalue(name) then return "Unknown" end
+    return ("|cff%s%s|r"):format(classColorHex[class] or "ffffff", name)
+  end
+  local reaction = UnitReaction(unit, "player")
+  local name = UnitName(unit)
+  if issecretvalue(reaction) or issecretvalue(name) then return "Unknown" end
+  if reaction then
+    return ("|cff%s%s|r"):format(factionColorHex[reaction] or "ffffff", name)
+  end
+  return ("|cffffffff%s|r"):format(name or "Unknown")
 end
 
 local function OnTooltipSetUnit(self)
   local unitName, unit = self:GetUnit()
-  if not unit then return end
+  if not unit or issecretvalue(unit) then return end
   rLib:setBackdropStyle(self, cfg.backdrop)
   --color tooltip textleft2..8
   GameTooltipTextLeft2:SetTextColor(unpack(cfg.textColor))
-  if not UnitIsPlayer(unit) then
+  local isPlayer = UnitIsPlayer(unit)
+  if issecretvalue(isPlayer) then return end
+  if not isPlayer then
     --unit is not a player
     --color textleft1 and statusbar by faction color
     local reaction = UnitReaction(unit, "player")
-    if reaction then
+    if not issecretvalue(reaction) and reaction then
       local color = FACTION_BAR_COLORS[reaction]
       if color then
         cfg.barColor = color
@@ -91,6 +105,7 @@ local function OnTooltipSetUnit(self)
     end
     --color textleft2 by classificationcolor
     local unitClassification = UnitClassification(unit)
+    if issecretvalue(unitClassification) then unitClassification = nil end
     local levelLine
     if string.find(GameTooltipTextLeft2:GetText() or "empty", "%a%s%d") then
       levelLine = GameTooltipTextLeft2
@@ -100,10 +115,13 @@ local function OnTooltipSetUnit(self)
     end
     if levelLine then
       local l = UnitLevel(unit)
-      local color = GetCreatureDifficultyColor((l > 0) and l or 999)
-      levelLine:SetTextColor(color.r,color.g,color.b)
+      if not issecretvalue(l) then
+        local color = GetCreatureDifficultyColor((l > 0) and l or 999)
+        levelLine:SetTextColor(color.r,color.g,color.b)
+      end
     end
-    if unitClassification == "worldboss" or UnitLevel(unit) == -1 then
+    local level = UnitLevel(unit)
+    if unitClassification == "worldboss" or (not issecretvalue(level) and level == -1) then
       self:AppendText(" |cffff0000{B}|r")
       GameTooltipTextLeft2:SetTextColor(unpack(cfg.bossColor))
     elseif unitClassification == "rare" then
@@ -116,6 +134,7 @@ local function OnTooltipSetUnit(self)
   else
     --unit is any player
     local _, unitClass = UnitClass(unit)
+    if issecretvalue(unitClass) then return end
     --color textleft1 and statusbar by class color
     local color = RAID_CLASS_COLORS[unitClass]
     cfg.barColor = color
@@ -123,26 +142,33 @@ local function OnTooltipSetUnit(self)
     GameTooltipTextLeft1:SetTextColor(color.r,color.g,color.b)
     --color textleft2 by guildcolor
     local unitGuild = GetGuildInfo(unit)
+    if issecretvalue(unitGuild) then unitGuild = nil end
     if unitGuild then
       GameTooltipTextLeft2:SetText("<"..unitGuild..">")
       GameTooltipTextLeft2:SetTextColor(unpack(cfg.guildColor))
     end
     local levelLine = unitGuild and GameTooltipTextLeft3 or GameTooltipTextLeft2
     local l = UnitLevel(unit)
-    local color = GetCreatureDifficultyColor((l > 0) and l or 999)
-    levelLine:SetTextColor(color.r,color.g,color.b)
+    if not issecretvalue(l) then
+      local color = GetCreatureDifficultyColor((l > 0) and l or 999)
+      levelLine:SetTextColor(color.r,color.g,color.b)
+    end
     --afk?
-    if UnitIsAFK(unit) then
+    local isAFK = UnitIsAFK(unit)
+    if not issecretvalue(isAFK) and isAFK then
       self:AppendText((" |cff%s<AFK>|r"):format(cfg.afkColorHex))
     end
   end
   --dead?
-  if UnitIsDeadOrGhost(unit) then
+  local isDead = UnitIsDeadOrGhost(unit)
+  if not issecretvalue(isDead) and isDead then
     GameTooltipTextLeft1:SetTextColor(unpack(cfg.deadColor))
   end
   --target line
-  if (UnitExists(unit.."target")) then
-    GameTooltip:AddDoubleLine(("|cff%s%s|r"):format(cfg.targetColorHex, "Target"),GetTarget(unit.."target") or "Unknown")
+  local targetUnit = unit .. "target"
+  local hasTarget = UnitExists(targetUnit)
+  if not issecretvalue(hasTarget) and hasTarget then
+    GameTooltip:AddDoubleLine(("|cff%s%s|r"):format(cfg.targetColorHex, "Target"),GetTarget(targetUnit) or "Unknown")
   end
 end
 
