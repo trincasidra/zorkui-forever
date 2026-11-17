@@ -1,0 +1,25 @@
+## Interface: 16001
+## Title: rUnitFrames
+## Author: zork
+## Notes: Simple oUF layout
+## Dependencies: oUF, rLib, rUnitFramesConfig
+
+modules\oUF_DebuffHighlight.lua
+
+core\init.lua
+core\functions.lua
+core\tags.lua
+core\style.lua
+
+templates\player.lua
+templates\target.lua
+templates\targettarget.lua
+templates\pet.lua
+templates\focus.lua
+templates\mouseover.lua
+templates\party.lua
+templates\boss.lua
+templates\nameplate.lua
+templates\raid.lua
+
+core\spawn.lua

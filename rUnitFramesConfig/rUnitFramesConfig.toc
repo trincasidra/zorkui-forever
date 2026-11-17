@@ -1,0 +1,19 @@
+## Interface: 16001
+## Author: zork
+## Title: rUnitFramesConfig
+## Notes: rUnitFrames config
+## RequiredDeps: rLib
+
+init.lua
+global.lua
+tags.lua
+player.lua
+target.lua
+targettarget.lua
+pet.lua
+focus.lua
+mouseover.lua
+party.lua
+boss.lua
+nameplate.lua
+raid.lua
