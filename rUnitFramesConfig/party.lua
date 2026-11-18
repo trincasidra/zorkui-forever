@@ -59,10 +59,10 @@ L.C.party = {
   --debuffs
   debuffs = {
     enabled = true,
-    point = {"LEFT","RIGHT",10,0},
+    point = {"LEFT","RIGHT",10,-4},
     num = 5,
     cols = 5,
-    size = 42,
+    size = 36,
     spacing = 5,
     initialAnchor = "TOPLEFT",
     growthX = "RIGHT",

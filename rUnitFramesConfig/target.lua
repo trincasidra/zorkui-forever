@@ -97,10 +97,10 @@ L.C.target = {
   },
   buffs = {
     enabled = true,
-    point = {"LEFT","RIGHT",5,0},
+    point = {"LEFT","RIGHT",5,-4},
     num = 32,
     cols = 8,
-    size = 32,
+    size = 34,
     spacing = 5,
     initialAnchor = "LEFT",
     growthX = "RIGHT",

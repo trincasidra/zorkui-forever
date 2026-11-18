@@ -549,21 +549,62 @@ local function CreatePowerText(self)
 end
 L.F.CreatePowerText = CreatePowerText
 
+local auraBackdropEdges = {
+  "TopLeftCorner", "TopRightCorner", "BottomLeftCorner", "BottomRightCorner",
+  "TopEdge", "BottomEdge", "LeftEdge", "RightEdge",
+}
+
+local function CreateAuraBackdrop(button, size, levelOffset)
+  local backdrop = L.C.backdrop
+  local inset = backdrop.inset or 5
+  local frame = CreateFrame("Frame", nil, button, BackdropTemplateMixin and "BackdropTemplate")
+  frame:SetFrameLevel(math.max(0, button:GetFrameLevel() - levelOffset))
+  frame:SetSize(size + inset * 2, size + inset * 2)
+  frame:SetPoint("CENTER", button, "CENTER")
+  frame:SetBackdrop(backdrop)
+  frame:SetBackdropColor(unpack(backdrop.bgColor))
+  frame:SetBackdropBorderColor(unpack(backdrop.edgeColor))
+  return frame
+end
+
+local function AddAuraBackdropColor(button, size, levelOffset, options)
+  local frame = CreateAuraBackdrop(button, size, levelOffset)
+  frame.Center:Hide()
+  for _, name in ipairs(auraBackdropEdges) do
+    button:AddDispelTypeTexture(frame[name], options)
+  end
+end
+
 local function PostCreateAuraButton(element, button)
   local size = element.size or 16
-  local bg = button:CreateTexture(nil,"BACKGROUND",nil,-8)
-  bg:SetTexture(L.C.textures.aura)
-  bg:SetVertexColor(0,0,0)
-  bg:SetPoint("TOPLEFT", -size/4, size/4)
-  bg:SetPoint("BOTTOMRIGHT", size/4, -size/4)
-  button.Background = bg
-  if button.Border then
-    button.Border:ClearAllPoints()
-    button.Border:SetPoint("TOPLEFT", -size/4, size/4)
-    button.Border:SetPoint("BOTTOMRIGHT", size/4, -size/4)
+  button.Background = CreateAuraBackdrop(button, size, 3)
+  if element.rShowBuffBackdrop or element.rShowDebuffBackdrop then
+    AddAuraBackdropColor(button, size, 2, {
+      style = Enum.CustomAuraButtonDispelTypeTextureStyle.PreserveAsset,
+      showWhenHelpful = element.rShowBuffBackdrop,
+      showWhenHarmful = element.rShowDebuffBackdrop,
+      showWithoutDispelType = false,
+      customDispelColorMap = element.rDispelColors,
+    })
+  end
+  if element.rShowStealableBackdrop then
+    AddAuraBackdropColor(button, size, 1, {
+      style = Enum.CustomAuraButtonDispelTypeTextureStyle.PreserveAsset,
+      showWhenHelpful = true,
+      showWithoutDispelType = true,
+      stealableFilter = Enum.CustomAuraButtonDispelTypeStealableFilter.Stealable,
+      customDispelColorMap = element.rStealableColors,
+    })
   end
   if button.Icon then
     button.Icon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
+    local mask = button:CreateMaskTexture()
+    mask:SetAtlas("UI-HUD-ActionBar-IconFrame-Mask", false)
+    local maskInset = size * 0.3
+    mask:SetPoint("TOPLEFT", button, "TOPLEFT", -maskInset, maskInset)
+    mask:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", maskInset, -maskInset)
+    button.Icon:AddMaskTexture(mask)
+    button.IconMask = mask
   end
   if button.Count then
     button.Count:SetFont(STANDARD_TEXT_FONT, size/1.65, "OUTLINE")
@@ -597,6 +638,7 @@ local function CreateAuraElement(self, cfg, defaultFilter)
     growthY = cfg.growthY or "DOWN",
     layoutLimit = width, --wrap after cfg.cols buttons
   })
+  element:EnableMouse(false)
   element:SetSize(width, height)
   SetPoint(element, self, cfg.point)
   --duration format
@@ -613,15 +655,20 @@ local function CreateAuraElement(self, cfg, defaultFilter)
   element.durationFormatter = secondsFormatter
   element.showDuration = cfg.showDuration == true
   element.disableCooldown = cfg.disableCooldown
-  element.showBuffBorder = cfg.showBuffBorder
-  element.showDebuffBorder = cfg.showDebuffBorder
-  element.dispelBorderStyle = cfg.dispelBorderStyle or Enum.CustomAuraButtonDispelTypeTextureStyle.Border
-  element.showStealableBorder = cfg.showStealableBorder
+  element.rShowBuffBackdrop = cfg.showBuffBorder
+  element.rShowDebuffBackdrop = cfg.showDebuffBorder
+  element.rShowStealableBackdrop = cfg.showStealableBorder
+  element.rDispelColors = {}
+  for key, color in pairs(self.colors.dispel) do element.rDispelColors[key] = color end
+  element.rDispelColors.None = CreateColor(0, 0, 0, 0)
+  element.rDispelColors.Bleed = CreateColor(1, 0, 0, 1)
+  local stealableColor = CreateColor(0.7, 0.25, 0.9, 1)
+  element.rStealableColors = {None = stealableColor}
+  for key in pairs(self.colors.dispel) do element.rStealableColors[key] = stealableColor end
   element.tooltipAnchor = cfg.tooltipAnchor
   element.PostCreateButton = cfg.PostCreateButton or PostCreateAuraButton
   element:AddGroup(cfg.filter or defaultFilter, {
     showDuration = cfg.showDuration == true,
-    dispelBorderStyle = element.dispelBorderStyle,
   })
   return element
 end
