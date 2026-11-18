@@ -44,6 +44,7 @@ local function SkinButton(button, cropIcon, preserveNormal, auraIcon)
   if not button or not button.CreateTexture then return end
   if not button.__rStyleBackdrop then
     local backdrop = CreateFrame("Frame", nil, button, BackdropTemplateMixin and "BackdropTemplate")
+    backdrop:SetScript("OnSizeChanged", nil)
     if auraIcon then
       backdrop:SetSize(40, 40)
       backdrop:SetPoint("CENTER", auraIcon, "CENTER")

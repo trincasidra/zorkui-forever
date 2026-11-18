@@ -24,9 +24,9 @@ local GameTooltip, C_AzeriteItem, C_IslandsQueue, C_Reputation, C_QuestLog = Gam
 
 local cfg = {
   scale = 0.9,
-  point = { "TOP", 0, -150 },
+  point = { "TOP", 0, -50 },
   size = { 32, 32 },
-  frameVisibility = "[petbattle][overridebar][vehicleui][possessbar][shapeshift][combat] hide; [mod] show; hide",
+  showOnModifier = false,
   frameVisibilityFunc = nil,
   --fader via OnShow
   fader = {
@@ -40,6 +40,7 @@ local cfg = {
     trigger = "OnShow",
   },
 }
+cfg.frameVisibility = cfg.showOnModifier and "[petbattle][overridebar][vehicleui][possessbar][shapeshift][combat] hide; [mod] show; hide" or "show"
 
 -----------------------------
 -- Functions
@@ -205,8 +206,10 @@ button:SetScript("OnLeave", OnLeave)
 button:SetScript("OnClick", OnClick)
 
 --OnShow fader
-if cfg.fader then
+if cfg.showOnModifier and cfg.fader then
   rLib:CreateFrameFader(button, cfg.fader)
+elseif not cfg.showOnModifier then
+  button:SetAlpha(1)
 end
 
 --drag frame
