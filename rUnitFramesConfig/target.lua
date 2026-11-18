@@ -39,6 +39,7 @@ L.C.target = {
     colorThreat = true,
     colorThreatInvers = true,
     frequentUpdates = true,
+    smoothing = Enum.StatusBarInterpolation.ExponentialEaseOut,
     name = {
       enabled = true,
       points = {
@@ -63,6 +64,7 @@ L.C.target = {
     point = {"TOP","BOTTOM",0,-4}, --if no relativeTo is given the frame base will be the relativeTo reference
     colorPower = true,
     frequentUpdates = true,
+    smoothing = Enum.StatusBarInterpolation.ExponentialEaseOut,
   },
   --raidmark
   raidmark = {

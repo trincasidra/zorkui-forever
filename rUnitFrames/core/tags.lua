@@ -33,6 +33,9 @@ oUF.Tags.Methods["rUnitFrames:health"] = function(unit)
 end
 oUF.Tags.Events["rUnitFrames:health"] = "UNIT_HEALTH UNIT_MAXHEALTH UNIT_CONNECTION"
 
+oUF.Tags.Methods["rUnitFrames:power"] = UnitPower
+oUF.Tags.Events["rUnitFrames:power"] = "UNIT_POWER_FREQUENT UNIT_POWER_UPDATE UNIT_MAXPOWER UNIT_DISPLAYPOWER"
+
 --role icons
 local ROLE_ICON_TANK = "|TInterface\\LFGFrame\\LFGRole:14:14:0:0:64:16:32:48:0:16|t"
 local ROLE_ICON_HEALER = "|TInterface\\LFGFrame\\LFGRole:14:14:0:0:64:16:48:64:0:16|t"

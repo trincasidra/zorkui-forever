@@ -236,6 +236,7 @@ local function CreateHealthBar(self)
   s.colorClass = self.cfg.healthbar.colorClass
   s.colorHealth = self.cfg.healthbar.colorHealth
   s.frequentUpdates = self.cfg.healthbar.frequentUpdates or false
+  s.smoothing = self.cfg.healthbar.smoothing
   --threat coloring is done by the layout (secret-safe), see PostUpdateHealthColor
   s.__colorThreat = self.cfg.healthbar.colorThreat
   s.__colorThreatInvers = self.cfg.healthbar.colorThreatInvers
@@ -327,6 +328,12 @@ local function CreateAdditionalPowerBar(self)
   --attributes
   s.colorPower = self.cfg.addpowerbar.colorPower
   s.bg.multiplier = L.C.colors.bgMultiplier
+  if self.cfg.addpowerbar.showDruidMana and ALT_POWER_BAR_PAIR_DISPLAY_INFO then
+    s.displayPairs = CopyTable(ALT_POWER_BAR_PAIR_DISPLAY_INFO)
+    s.displayPairs.DRUID = s.displayPairs.DRUID or {}
+    s.displayPairs.DRUID[Enum.PowerType.Rage] = true
+    s.displayPairs.DRUID[Enum.PowerType.Energy] = true
+  end
   return s
 end
 L.F.CreateAdditionalPowerBar = CreateAdditionalPowerBar
@@ -379,6 +386,7 @@ local function CreatePowerBar(self)
   s.colorPower = self.cfg.powerbar.colorPower
   s.bg.multiplier = L.C.colors.bgMultiplier
   s.frequentUpdates = self.cfg.powerbar.frequentUpdates or false
+  s.smoothing = self.cfg.powerbar.smoothing
   return s
 end
 L.F.CreatePowerBar = CreatePowerBar
@@ -483,10 +491,25 @@ local function CreateRaidMark(self)
 end
 L.F.CreateRaidMark = CreateRaidMark
 
+local function GetHealthTextFrame(self)
+  if self.Health.rTextFrame then return self.Health.rTextFrame end
+  local parent = self.rAbsorbBar or self.Health
+  local level = parent:GetFrameLevel()
+  for _, bar in ipairs({self.Health, self.Health.HealingAll, self.Health.DamageAbsorb, self.Health.HealAbsorb}) do
+    level = math.max(level, bar:GetFrameLevel())
+  end
+  local frame = CreateFrame("Frame", nil, parent)
+  frame:SetAllPoints(parent)
+  frame:SetFrameLevel(level + 1)
+  self.Health.rTextFrame = frame
+  return frame
+end
+
 local function CreateNameText(self)
   if not self.cfg.healthbar or not self.cfg.healthbar.name or not self.cfg.healthbar.name.enabled then return end
   local cfg = self.cfg.healthbar.name
-  local text = CreateText(self.rAbsorbBar or self.Health,cfg.font,cfg.size,cfg.outline,cfg.align,cfg.noshadow)
+  local text = CreateText(GetHealthTextFrame(self),cfg.font,cfg.size,cfg.outline,cfg.align,cfg.noshadow)
+  text.frequentUpdates = cfg.frequentUpdates or false
   if cfg.points then
     SetPoints(text,self.rAbsorbBar or self.Health,cfg.points)
   else
@@ -499,8 +522,8 @@ L.F.CreateNameText = CreateNameText
 local function CreateHealthText(self)
   if not self.cfg.healthbar or not self.cfg.healthbar.health or not self.cfg.healthbar.health.enabled then return end
   local cfg = self.cfg.healthbar.health
-  local text = CreateText(self.rAbsorbBar or self.Health,cfg.font,cfg.size,cfg.outline,cfg.align,cfg.noshadow)
-  text.frequentUpdates = self.cfg.healthbar.frequentUpdates or false
+  local text = CreateText(GetHealthTextFrame(self),cfg.font,cfg.size,cfg.outline,cfg.align,cfg.noshadow)
+  text.frequentUpdates = cfg.frequentUpdates or false
   if cfg.points then
     SetPoints(text,self.rAbsorbBar or self.Health,cfg.points)
   else
@@ -513,8 +536,11 @@ L.F.CreateHealthText = CreateHealthText
 local function CreatePowerText(self)
   if not self.cfg.powerbar or not self.cfg.powerbar.power or not self.cfg.powerbar.power.enabled then return end
   local cfg = self.cfg.powerbar.power
-  local text = CreateText(self.Power,cfg.font,cfg.size,cfg.outline,cfg.align,cfg.noshadow)
-  text.frequentUpdates = self.cfg.powerbar.frequentUpdates or false
+  local textFrame = CreateFrame("Frame", nil, self.Power)
+  textFrame:SetAllPoints(self.Power)
+  textFrame:SetFrameLevel((self.Power.CostPrediction or self.Power):GetFrameLevel() + 1)
+  local text = CreateText(textFrame,cfg.font,cfg.size,cfg.outline,cfg.align,cfg.noshadow)
+  text.frequentUpdates = cfg.frequentUpdates or false
   if cfg.points then
     SetPoints(text,self.Power,cfg.points)
   else

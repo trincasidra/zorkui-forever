@@ -44,8 +44,8 @@ end
 L.C.tagEvents["rUnitFramesConfig:classification"] = "UNIT_CLASSIFICATION_CHANGED"
 
 local pvpIcons = {
-  Alliance = "|TInterface\\TargetingFrame\\UI-PVP-Alliance:16:16|t",
-  Horde = "|TInterface\\TargetingFrame\\UI-PVP-Horde:16:16|t",
+  Alliance = "|TInterface\\TargetingFrame\\UI-PVP-Alliance:20:20:0:0:64:64:0:38:0:38|t",
+  Horde = "|TInterface\\TargetingFrame\\UI-PVP-Horde:20:20:0:0:64:64:0:38:0:38|t",
 }
 
 L.C.tagMethods["rUnitFramesConfig:pvpStatus"] = function(unit,...)
@@ -55,9 +55,19 @@ L.C.tagMethods["rUnitFramesConfig:pvpStatus"] = function(unit,...)
   if issecretvalue(faction) or not faction then return "" end
   local icon = pvpIcons[faction]
   if not icon then return "" end
-  if unit ~= "player" then return icon end
+  return icon
+end
+L.C.tagEvents["rUnitFramesConfig:pvpStatus"] = "WAR_MODE_STATUS_UPDATE UNIT_FACTION PLAYER_FLAGS_CHANGED"
+
+L.C.tagMethods["rUnitFramesConfig:pvpStatusWithTimer"] = function(unit,...)
+  local isPVP = UnitIsPVP(unit)
+  if issecretvalue(isPVP) or not isPVP then return "" end
+  local faction = UnitFactionGroup(unit)
+  if issecretvalue(faction) or not faction then return "" end
+  local icon = pvpIcons[faction]
+  if not icon then return "" end
   local pvpTimer = math.floor(GetPVPTimer()/1000)
   if pvpTimer < 300 then return icon.." "..pvpTimer.."s" end
   return icon
 end
-L.C.tagEvents["rUnitFramesConfig:pvpStatus"] = "WAR_MODE_STATUS_UPDATE UNIT_FACTION"
+L.C.tagEvents["rUnitFramesConfig:pvpStatusWithTimer"] = "WAR_MODE_STATUS_UPDATE UNIT_FACTION PLAYER_FLAGS_CHANGED"

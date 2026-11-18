@@ -37,6 +37,7 @@ L.C.player = {
     colorHealth = true,
     colorThreat = true,
     frequentUpdates = true,
+    smoothing = Enum.StatusBarInterpolation.ExponentialEaseOut,
     name = {
       enabled = true,
       points = {
@@ -44,7 +45,8 @@ L.C.player = {
         {"TOPRIGHT",-2,10},
       },
       size = 17,
-      tag = "[rUnitFramesConfig:status][rUnitFramesConfig:pvpStatus]",
+      frequentUpdates = 1,
+      tag = "[rUnitFramesConfig:status][rUnitFramesConfig:pvpStatusWithTimer]",
     },
     health = {
       enabled = true,
@@ -61,11 +63,12 @@ L.C.player = {
     point = {"TOP","BOTTOM",0,-4}, --if no relativeTo is given the frame base will be the relativeTo reference
     colorPower = true,
     frequentUpdates = true,
+    smoothing = Enum.StatusBarInterpolation.ExponentialEaseOut,
     power = {
       enabled = true,
       point = {"RIGHT",-2,0},
       size = 12,
-      tag = "[curpp]",
+      tag = "[rUnitFrames:power]",
     },
   },
   --raidmark
@@ -111,6 +114,7 @@ L.C.player = {
     point = {"TOPRIGHT","TOPLEFT",-4,0},
     orientation = "VERTICAL",
     colorPower = true,
+    showDruidMana = true,
   },
   classpower = {
     enabled = true,
