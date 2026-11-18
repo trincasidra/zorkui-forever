@@ -28,9 +28,11 @@ local microButtonNames = {
   "AchievementMicroButton", "QuestLogMicroButton", "GuildMicroButton",
   "LFDMicroButton", "CollectionsMicroButton", "EJMicroButton",
   "StoreMicroButton", "MainMenuMicroButton", "HelpMicroButton",
+  "ProfessionMicroButton", "PlayerSpellsMicroButton", "LegacyMicroButton",
+  "HousingMicroButton",
 }
 
-local function SkinButton(button, cropIcon, debuffIndex)
+local function SkinButton(button, cropIcon, debuffIndex, preserveNormal)
   if not button or not button.CreateTexture then return end
   if not button.__rStyleBackdrop then
     local backdrop = CreateFrame("Frame", nil, button, BackdropTemplateMixin and "BackdropTemplate")
@@ -53,7 +55,7 @@ local function SkinButton(button, cropIcon, debuffIndex)
   end
 
   local normalTexture = button.GetNormalTexture and button:GetNormalTexture()
-  if normalTexture then
+  if normalTexture and not preserveNormal then
     normalTexture:Hide()
     normalTexture.Show = noOperation
   end
@@ -108,13 +110,56 @@ local function SkinDebuffButtons()
   for index = 1, (DEBUFF_MAX_DISPLAY or 16) do SkinDebuffButton(_G["DebuffButton" .. index], index) end
 end
 
-local function SkinMicroAndBags()
-  for _, name in ipairs(microButtonNames) do SkinButton(_G[name], false) end
-  if type(MICRO_BUTTONS) == "table" then
-    for _, name in ipairs(MICRO_BUTTONS) do SkinButton(type(name) == "string" and _G[name] or name, false) end
+local function HideArtwork(region)
+  if not region or not region.Hide then return end
+  region:Hide()
+  region.Show = noOperation
+end
+
+local function SkinMicroButton(button)
+  if not button then return end
+  SkinButton(button, false, nil, true)
+  HideArtwork(button.Background)
+  HideArtwork(button.PushedBackground)
+  HideArtwork(button.Shadow)
+  HideArtwork(button.PushedShadow)
+end
+
+local function SkinBagButton(button)
+  if not button then return end
+  SkinButton(button, true)
+  HideArtwork(button.Background)
+  HideArtwork(button.Border)
+  HideArtwork(button.IconBorder)
+  if button.GetPushedTexture then
+    HideArtwork(button:GetPushedTexture())
   end
-  SkinButton(MainMenuBarBackpackButton, true)
-  for index = 0, 3 do SkinButton(_G["CharacterBag" .. index .. "Slot"], true) end
+end
+
+local function SkinMicroAndBags()
+  if MicroMenu then
+    HideArtwork(MicroMenu.BorderArt)
+    HideArtwork(MicroMenu.BackgroundArt)
+  end
+  if BagsBar then
+    HideArtwork(BagsBar.BorderArt)
+    HideArtwork(BagsBar.BackgroundArt)
+    BagsBar.useDividers = false
+    if BagsBar.HorizontalDividersPool then
+      BagsBar.HorizontalDividersPool:ReleaseAll()
+    end
+    if BagsBar.VerticalDividersPool then
+      BagsBar.VerticalDividersPool:ReleaseAll()
+    end
+  end
+  for _, name in ipairs(microButtonNames) do SkinMicroButton(_G[name]) end
+  if type(MICRO_BUTTONS) == "table" then
+    for _, name in ipairs(MICRO_BUTTONS) do SkinMicroButton(type(name) == "string" and _G[name] or name) end
+  end
+  SkinBagButton(MainMenuBarBackpackButton)
+  for index = 0, 3 do SkinBagButton(_G["CharacterBag" .. index .. "Slot"]) end
+  SkinBagButton(CharacterReagentBag0Slot)
+  SkinBagButton(KeyRingButton)
 end
 
 local function HookUpdates()

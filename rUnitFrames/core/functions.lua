@@ -159,10 +159,6 @@ local function AltPowerBarPostUpdate(self, unit)
     if tb then r, g, b = tr, tg, tb end
   end
   self:SetStatusBarColor(r, g, b)
-  if self.bg then
-    local mu = self.bg.multiplier or 0.3
-    self.bg:SetVertexColor(r*mu, g*mu, b*mu)
-  end
 end
 
 local function CreateAltPowerBar(self)
@@ -175,7 +171,7 @@ local function CreateAltPowerBar(self)
   SetPoint(s,self,self.cfg.altpowerbar.point)
   --bg
   local bg = s:CreateTexture(nil, "BACKGROUND")
-  bg:SetTexture(L.C.textures.statusbar)
+  bg:SetTexture(L.C.textures.statusbarBG)
   bg:SetAllPoints()
   if L.C.colors.power.bg then
     bg:SetVertexColor(unpack(L.C.colors.power.bg))
@@ -322,6 +318,9 @@ local function CreateAdditionalPowerBar(self)
   local bg = s:CreateTexture(nil, "BACKGROUND")
   bg:SetTexture(L.C.textures.statusbarBG)
   bg:SetAllPoints()
+  if L.C.colors.power.bg then
+    bg:SetVertexColor(unpack(L.C.colors.power.bg))
+  end
   s.bg = bg
   --backdrop
   CreateBackdrop(s)
