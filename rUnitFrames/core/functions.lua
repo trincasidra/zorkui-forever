@@ -232,7 +232,7 @@ local function CreateHealthBar(self)
   s.colorClass = self.cfg.healthbar.colorClass
   s.colorHealth = self.cfg.healthbar.colorHealth
   s.frequentUpdates = self.cfg.healthbar.frequentUpdates or false
-  s.smoothing = self.cfg.healthbar.smoothing
+  s.smoothing = self.cfg.healthbar.smoothing or Enum.StatusBarInterpolation.ExponentialEaseOut
   --threat coloring is done by the layout (secret-safe), see PostUpdateHealthColor
   s.__colorThreat = self.cfg.healthbar.colorThreat
   s.__colorThreatInvers = self.cfg.healthbar.colorThreatInvers
