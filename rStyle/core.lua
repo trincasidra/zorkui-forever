@@ -2,7 +2,6 @@
 
 local A, L = ...
 
-local buttonSize = NUM_ACTIONBAR_BUTTONS or 12
 local debuffColors = DebuffTypeColor or {}
 local fallbackDebuffColors = {
   Magic = {0.2, 0.6, 1},
@@ -23,13 +22,6 @@ local backdropConfig = {
   insets = {left = 5, right = 5, top = 5, bottom = 5},
 }
 local backdropColor = {0, 0, 0, 0.8}
-
-local actionPrefixes = {
-  "ActionButton", "MultiBarBottomLeftButton", "MultiBarBottomRightButton",
-  "MultiBarLeftButton", "MultiBarRightButton", "MultiBar5Button",
-  "MultiBar6Button", "PetActionButton", "StanceButton", "PossessButton",
-  "OverrideActionBarButton", "ExtraActionButton",
-}
 
 local microButtonNames = {
   "CharacterMicroButton", "SpellbookMicroButton", "TalentMicroButton",
@@ -69,34 +61,12 @@ local function SkinButton(button, cropIcon, preserveNormal, auraIcon)
   end
 
   local normalTexture = button.GetNormalTexture and button:GetNormalTexture()
-  if normalTexture and not preserveNormal then
-    normalTexture:Hide()
-    normalTexture.Show = noOperation
-  end
-
-  if buttonName then
-    local auraBorder = button.Border or button.IconBorder or _G[buttonName .. "Border"] or _G[buttonName .. "IconBorder"]
-    if auraBorder and auraBorder.Hide then
-      auraBorder:Hide()
-      auraBorder.Show = noOperation
-    end
+  if normalTexture and not preserveNormal and not auraIcon then
+    normalTexture:SetAlpha(0)
   end
 
   local red, green, blue = unpack(backdropColor)
   button.__rStyleBackdrop:SetBackdropBorderColor(red, green, blue, 0.8)
-end
-
-local function SkinActionButtons()
-  for _, prefix in ipairs(actionPrefixes) do
-    local limit = prefix == "PetActionButton" and (NUM_PET_ACTION_SLOTS or 10)
-      or prefix == "StanceButton" and (NUM_STANCE_SLOTS or 10)
-      or prefix == "PossessButton" and (NUM_POSSESS_SLOTS or 2)
-      or prefix == "OverrideActionBarButton" and 6
-      or prefix == "ExtraActionButton" and 1
-      or buttonSize
-    for index = 1, limit do SkinButton(_G[prefix .. index], true) end
-  end
-  SkinButton(ZoneAbilityFrame and ZoneAbilityFrame.SpellButton, true)
 end
 
 local function SkinBuffButtons()
@@ -240,8 +210,6 @@ local function HookUpdates()
   local function Hook(name, callback)
     if type(_G[name]) == "function" then hooksecurefunc(name, callback) end
   end
-  Hook("ActionButton_Update", function(button) SkinButton(button, true) end)
-  Hook("ActionButton_UpdateUsable", function(button) SkinButton(button, true) end)
   Hook("BuffFrame_UpdateAllBuffAnchors", SkinBuffButtons)
   Hook("DebuffButton_UpdateAnchors", SkinDebuffButton)
 end
@@ -258,7 +226,6 @@ eventFrame:SetScript("OnEvent", function(_, event, unit)
     SkinDebuffButtons()
     return
   end
-  SkinActionButtons()
   SkinBuffButtons()
   SkinDebuffButtons()
   SkinMicroAndBags()
