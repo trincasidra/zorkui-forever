@@ -115,6 +115,9 @@ L.C.nameplate = {
     growthY = "UP",
     disableCooldown = false,
     showDuration = false,
+    showDebuffBorder = true,
+    showDebuffIndicator = true,
+    dispelBorderStyle = Enum.CustomAuraButtonDispelTypeTextureStyle.Border,
     filter = "HARMFUL|PLAYER|INCLUDE_NAME_PLATE_ONLY",
   },
   --buffs

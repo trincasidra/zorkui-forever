@@ -553,6 +553,38 @@ local auraBackdropEdges = {
   "TopLeftCorner", "TopRightCorner", "BottomLeftCorner", "BottomRightCorner",
   "TopEdge", "BottomEdge", "LeftEdge", "RightEdge",
 }
+local bleedAuraSpellIDs = {
+  --pounce
+  [9005] = true, --rank 1
+  [9823] = true, --rank 2
+  [9827] = true, --rank 3
+  --rake
+  [1822] = true, --rank 1
+  [1823] = true, --rank 2
+  [1824] = true, --rank 3
+  [9904] = true, --rank 4
+  --rip
+  [1079] = true, --rank 1
+  [9492] = true, --rank 2
+  [9493] = true, --rank 3
+  [9752] = true, --rank 4
+  [9894] = true, --rank 5
+  [9896] = true, --rank 6
+  --lacerate
+  [1328617] = true, --rank 1
+  [1328616] = true, --rank 2
+  [414644] = true, --rank 3
+  [1235826] = true, --rank 4
+  [1235827] = true, --rank 5
+  --rend
+  [772] = true, --rank 1
+  [6546] = true, --rank 2
+  [6547] = true, --rank 3
+  [6548] = true, --rank 4
+  [11572] = true, --rank 5
+  [11573] = true, --rank 6
+  [11574] = true, --rank 7
+}
 
 local function CreateAuraBackdrop(button, size, levelOffset)
   local backdrop = L.C.backdrop
@@ -575,7 +607,7 @@ local function AddAuraBackdropColor(button, size, levelOffset, options)
   end
 end
 
-local function PostCreateAuraButton(element, button)
+local function PostCreateAuraButton(element, button, options)
   local size = element.size or 16
   button.Background = CreateAuraBackdrop(button, size, 3)
   if element.rShowBuffBackdrop or element.rShowDebuffBackdrop then
@@ -594,6 +626,15 @@ local function PostCreateAuraButton(element, button)
       showWithoutDispelType = true,
       stealableFilter = Enum.CustomAuraButtonDispelTypeStealableFilter.Stealable,
       customDispelColorMap = element.rStealableColors,
+    })
+  end
+  local candidateFilters = options and options.candidateFilters
+  if candidateFilters and candidateFilters.includeSpellIDs then
+    AddAuraBackdropColor(button, size, 1, {
+      style = Enum.CustomAuraButtonDispelTypeTextureStyle.PreserveAsset,
+      showWhenHarmful = true,
+      showWithoutDispelType = true,
+      customDispelColorMap = element.rBleedColors,
     })
   end
   if button.Icon then
@@ -667,9 +708,25 @@ local function CreateAuraElement(self, cfg, defaultFilter)
   for key in pairs(self.colors.dispel) do element.rStealableColors[key] = stealableColor end
   element.tooltipAnchor = cfg.tooltipAnchor
   element.PostCreateButton = cfg.PostCreateButton or PostCreateAuraButton
-  element:AddGroup(cfg.filter or defaultFilter, {
-    showDuration = cfg.showDuration == true,
-  })
+  local filter = cfg.filter or defaultFilter
+  local groupOptions = {showDuration = cfg.showDuration == true}
+  if defaultFilter == "HARMFUL" and cfg.showDebuffBorder then
+    local excludeBleeds = {}
+    for spellID in pairs(bleedAuraSpellIDs) do excludeBleeds[spellID] = true end
+    element.rBleedSpellIDs = {
+      candidateFilters = {includeSpellIDs = bleedAuraSpellIDs},
+    }
+    element.rBleedColors = {None = CreateColor(1, 0, 0, 1)}
+    for key in pairs(self.colors.dispel) do element.rBleedColors[key] = CreateColor(1, 0, 0, 1) end
+    local regularOptions = {showDuration = cfg.showDuration == true}
+    regularOptions.candidateFilters = {excludeSpellIDs = excludeBleeds}
+    element:AddGroup(filter, regularOptions)
+    local bleedOptions = {showDuration = cfg.showDuration == true}
+    bleedOptions.candidateFilters = element.rBleedSpellIDs.candidateFilters
+    element:AddGroup(filter, bleedOptions)
+  else
+    element:AddGroup(filter, groupOptions)
+  end
   return element
 end
 
