@@ -27,7 +27,7 @@ local cfg = {
   point = { "TOP", 0, -50 },
   size = { 32, 32 },
   showOnModifier = false,
-  frameVisibilityFunc = nil,
+  frameVisibilityFunc = nil,s
   --fader via OnShow
   fader = {
     fadeInAlpha = 1,
@@ -176,20 +176,18 @@ local function OnLeave(self)
   GameTooltip:Hide()
 end
 
-local function OnClick(self)
-  self.count = self.count+1
-  if self.count % 2 == 0 then
-    self.gem:SetTexture(L.mediapath.."chatgem_inactive")
-  else
-    self.gem:SetTexture(L.mediapath.."chatgem_active")
-  end
+local button
+
+local function UpdateGemColor()
+  local texture = (GetXPExhaustion() or 0) > 0 and "chatgem_inactive" or "chatgem_active"
+  button.gem:SetTexture(L.mediapath..texture)
 end
 
 -----------------------------
 -- Init
 -----------------------------
 
-local button = CreateFrame("Button", A, UIParent, SecureHandlerStateTemplate)
+button = CreateFrame("Button", A, UIParent, SecureHandlerStateTemplate)
 button:SetScale(cfg.scale)
 button:SetPoint(unpack(cfg.point))
 button:SetSize(unpack(cfg.size))
@@ -199,11 +197,18 @@ local gem = button:CreateTexture(nil, "BACKGROUND",nil,-8)
 gem:SetTexture(L.mediapath.."chatgem_active")
 gem:SetAllPoints()
 button.gem = gem
-button.count = 1
 RegisterStateDriver(button, cfg.frameVisibilityFunc or "visibility", cfg.frameVisibility)
 button:SetScript("OnEnter", OnEnter)
 button:SetScript("OnLeave", OnLeave)
-button:SetScript("OnClick", OnClick)
+
+local eventFrame = CreateFrame("Frame")
+eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+eventFrame:RegisterEvent("PLAYER_XP_UPDATE")
+eventFrame:RegisterEvent("PLAYER_LEVEL_UP")
+eventFrame:RegisterEvent("PLAYER_UPDATE_RESTING")
+eventFrame:RegisterEvent("UPDATE_EXHAUSTION")
+eventFrame:SetScript("OnEvent", UpdateGemColor)
+UpdateGemColor()
 
 --OnShow fader
 if cfg.showOnModifier and cfg.fader then

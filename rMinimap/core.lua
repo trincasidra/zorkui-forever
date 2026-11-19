@@ -67,6 +67,32 @@ AddonCompartmentFrame.Show = dummy
 AddonCompartmentFrame:SetAlpha(0)
 
 local pendingLayout = false
+local mailLayoutHooked = false
+
+local function UpdateMailLayout()
+  local mailFrame = MinimapCluster.IndicatorFrame.MailFrame or MinimapCluster.MailFrame or _G.MiniMapMailFrame
+  if not mailFrame then return end
+
+  if not mailLayoutHooked then
+    local parent = mailFrame:GetParent()
+    if parent and parent.Layout then
+      hooksecurefunc(parent, "Layout", UpdateMailLayout)
+      mailLayoutHooked = true
+    end
+  end
+
+  mailFrame:ClearAllPoints()
+  mailFrame:SetPoint("TOPRIGHT", Minimap, "TOPRIGHT", -24, -24)
+  mailFrame:SetSize(20, 15)
+
+  local mailIcon = mailFrame.MailIcon or _G.MiniMapMailIcon
+  if mailIcon then
+    mailIcon:ClearAllPoints()
+    mailIcon:SetPoint("CENTER", mailFrame, "CENTER")
+    mailIcon:SetAtlas("ui-hud-minimap-mail-up")
+    mailIcon:SetSize(20, 15)
+  end
+end
 
 local function UpdateLayout()
   if InCombatLockdown() then
@@ -114,6 +140,8 @@ local function UpdateLayout()
     end
   end
 
+  UpdateMailLayout()
+
   if GameTimeFrame then
     GameTimeFrame:Hide()
   end
@@ -140,6 +168,10 @@ end
 
 function events:PLAYER_ENTERING_WORLD()
   UpdateLayout()
+end
+
+function events:UPDATE_PENDING_MAIL()
+  UpdateMailLayout()
 end
 
 function events:ADDON_LOADED(addonName)

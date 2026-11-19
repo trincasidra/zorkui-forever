@@ -8,8 +8,6 @@
 
 local A, L = ...
 
-local DefaultSetItemRef = SetItemRef
-
 local cfg = {}
 cfg.dropshadow = {}
 cfg.dropshadow.offset = {1,-2}
@@ -80,22 +78,21 @@ local function OnMOuseScroll(self,dir)
   end
 end
 
---we replace the default setitemref and use it to parse links for alt invite and url copy
-function SetItemRef(link, ...)
+-- Keep Blizzard's link dispatcher untainted for player context menus.
+hooksecurefunc("SetItemRef", function(link, text, button)
   local type, value = link:match("(%a+):(.+)")
-  if IsAltKeyDown() and type == "player" then
+  if button == "LeftButton" and IsAltKeyDown() and type == "player" then
     InviteUnit(value:match("([^:]+)"))
   elseif (type == "url") then
     local eb = LAST_ACTIVE_CHAT_EDIT_BOX or ChatFrame1EditBox
-    if not eb then return end
-    eb:SetText(value)
-    eb:SetFocus()
-    eb:HighlightText()
-    if not eb:IsShown() then eb:Show() end
-  else
-    return DefaultSetItemRef(link, ...)
+    if eb then
+      eb:SetText(value)
+      eb:SetFocus()
+      eb:HighlightText()
+      if not eb:IsShown() then eb:Show() end
+    end
   end
-end
+end)
 
 --AddMessage
 local function AddMessage(self, text, ...)
